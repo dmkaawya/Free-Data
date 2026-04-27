@@ -8,6 +8,30 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
+            /* Light Theme - Default */
+            --bg-deep: #f0f4f8;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-card-hover: rgba(248, 250, 252, 1);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent: #0891b2;
+            --accent-glow: rgba(8, 145, 178, 0.15);
+            --danger: #dc2626;
+            --danger-glow: rgba(220, 38, 38, 0.1);
+            --warning: #d97706;
+            --warning-glow: rgba(217, 119, 6, 0.1);
+            --success: #059669;
+            --success-glow: rgba(5, 150, 105, 0.1);
+            --border: rgba(8, 145, 178, 0.15);
+            --border-strong: rgba(8, 145, 178, 0.4);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --nav-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        [data-theme="dark"] {
             --bg-deep: #05080f;
             --bg-primary: #0a1018;
             --bg-secondary: #0f1820;
@@ -26,6 +50,8 @@
             --success-glow: rgba(0, 255, 136, 0.2);
             --border: rgba(0, 229, 192, 0.15);
             --border-strong: rgba(0, 229, 192, 0.35);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            --nav-bg: rgba(10, 16, 24, 0.95);
         }
 
         * {
@@ -41,9 +67,10 @@
             min-height: 100vh;
             line-height: 1.7;
             overflow-x: hidden;
+            transition: background 0.4s ease, color 0.4s ease;
         }
 
-        /* Animated Background */
+        /* Animated Background - Light */
         .bg-grid {
             position: fixed;
             top: 0;
@@ -51,11 +78,18 @@
             width: 100%;
             height: 100%;
             background-image: 
-                linear-gradient(rgba(0, 229, 192, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 229, 192, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
+                linear-gradient(rgba(8, 145, 178, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(8, 145, 178, 0.04) 1px, transparent 1px);
+            background-size: 60px 60px;
             pointer-events: none;
             z-index: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        [data-theme="dark"] .bg-grid {
+            background-image: 
+                linear-gradient(rgba(0, 229, 192, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 192, 0.03) 1px, transparent 1px);
         }
 
         .bg-glow {
@@ -64,28 +98,33 @@
             height: 600px;
             border-radius: 50%;
             filter: blur(120px);
-            opacity: 0.4;
+            opacity: 0.2;
             pointer-events: none;
             z-index: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        [data-theme="dark"] .bg-glow {
+            opacity: 0.4;
         }
 
         .glow-1 {
             top: -200px;
             right: -100px;
-            background: radial-gradient(circle, var(--danger-glow) 0%, transparent 70%);
-            animation: float 15s ease-in-out infinite;
+            background: radial-gradient(circle, var(--danger) 0%, transparent 70%);
+            animation: float 20s ease-in-out infinite;
         }
 
         .glow-2 {
             bottom: -200px;
             left: -100px;
-            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-            animation: float 18s ease-in-out infinite reverse;
+            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+            animation: float 25s ease-in-out infinite reverse;
         }
 
         @keyframes float {
             0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(30px, -30px) scale(1.1); }
+            50% { transform: translate(40px, -40px) scale(1.15); }
         }
 
         /* Header */
@@ -95,7 +134,7 @@
             left: 0;
             right: 0;
             background: linear-gradient(180deg, var(--bg-deep) 0%, transparent 100%);
-            padding: 1rem 1.5rem;
+            padding: 1rem 1.25rem;
             z-index: 100;
         }
 
@@ -114,19 +153,19 @@
         }
 
         .logo-icon {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             background: linear-gradient(135deg, var(--danger) 0%, var(--warning) 100%);
-            border-radius: 10px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            animation: pulse-glow 2s ease-in-out infinite;
+            animation: pulse-glow 3s ease-in-out infinite;
         }
 
         @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px var(--danger-glow); }
-            50% { box-shadow: 0 0 35px var(--danger-glow); }
+            0%, 100% { box-shadow: 0 0 15px var(--danger-glow); }
+            50% { box-shadow: 0 0 30px var(--danger-glow); }
         }
 
         .logo-icon svg {
@@ -138,28 +177,71 @@
         .logo-text {
             font-size: 0.85rem;
             font-weight: 700;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.03em;
             text-transform: uppercase;
             color: var(--text-secondary);
         }
 
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .theme-toggle svg {
+            width: 20px;
+            height: 20px;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover svg {
+            color: var(--accent);
+        }
+
+        .sun-icon { display: block; }
+        .moon-icon { display: none; }
+
+        [data-theme="dark"] .sun-icon { display: none; }
+        [data-theme="dark"] .moon-icon { display: block; }
+
+        /* Language Toggle */
         .lang-toggle {
             display: flex;
-            gap: 0.25rem;
+            gap: 0.2rem;
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 3px;
         }
 
         .lang-btn {
-            padding: 0.4rem 0.75rem;
+            padding: 0.45rem 0.75rem;
             background: transparent;
             border: none;
             color: var(--text-muted);
             font-size: 0.75rem;
             font-weight: 600;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.25s ease;
             font-family: inherit;
@@ -167,7 +249,7 @@
 
         .lang-btn.active {
             background: var(--accent);
-            color: var(--bg-deep);
+            color: white;
         }
 
         /* Main Container */
@@ -176,7 +258,7 @@
             z-index: 1;
             max-width: 600px;
             margin: 0 auto;
-            padding: 80px 1rem 120px;
+            padding: 85px 1rem 120px;
             min-height: 100vh;
         }
 
@@ -184,12 +266,12 @@
         .page {
             display: none;
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(15px);
         }
 
         .page.active {
             display: block;
-            animation: fadeInUp 0.5s ease forwards;
+            animation: fadeInUp 0.45s ease forwards;
         }
 
         @keyframes fadeInUp {
@@ -202,12 +284,13 @@
         /* Warning Banner */
         .warning-banner {
             background: linear-gradient(135deg, var(--danger-glow) 0%, transparent 100%);
-            border: 1px solid rgba(255, 68, 119, 0.3);
-            border-radius: 16px;
+            border: 1px solid rgba(220, 38, 38, 0.25);
+            border-radius: 18px;
             padding: 1.25rem;
             margin-bottom: 1.5rem;
             position: relative;
             overflow: hidden;
+            transition: all 0.3s ease;
         }
 
         .warning-banner::before {
@@ -222,7 +305,7 @@
         }
 
         .warning-banner h2 {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 800;
             color: var(--danger);
             margin-bottom: 0.5rem;
@@ -242,20 +325,21 @@
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 20px;
-            margin-bottom: 1rem;
+            margin-bottom: 0.85rem;
             overflow: hidden;
             backdrop-filter: blur(20px);
             transition: all 0.3s ease;
+            box-shadow: var(--shadow);
         }
 
         .card:hover {
             border-color: var(--border-strong);
             background: var(--bg-card-hover);
+            transform: translateY(-2px);
         }
 
         .card-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border);
+            padding: 1.1rem 1.25rem;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -264,32 +348,34 @@
         }
 
         .card-header:hover {
-            background: rgba(0, 229, 192, 0.05);
+            background: var(--accent-glow);
         }
 
         .card-header-left {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.85rem;
         }
 
         .card-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s ease;
         }
 
-        .card-icon.danger { background: var(--danger-glow); }
-        .card-icon.warning { background: var(--warning-glow); }
-        .card-icon.success { background: var(--success-glow); }
-        .card-icon.accent { background: var(--accent-glow); }
+        .card-icon.danger { background: var(--danger-glow); border: 1px solid rgba(220, 38, 38, 0.15); }
+        .card-icon.warning { background: var(--warning-glow); border: 1px solid rgba(217, 119, 6, 0.15); }
+        .card-icon.success { background: var(--success-glow); border: 1px solid rgba(5, 150, 105, 0.15); }
+        .card-icon.accent { background: var(--accent-glow); border: 1px solid rgba(8, 145, 178, 0.15); }
 
         .card-icon svg {
             width: 22px;
             height: 22px;
+            transition: all 0.3s ease;
         }
 
         .card-icon.danger svg { color: var(--danger); }
@@ -304,31 +390,21 @@
         }
 
         .card-subtitle {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: var(--text-muted);
-            margin-top: 0.125rem;
+            margin-top: 0.15rem;
         }
 
         .card-arrow {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             color: var(--text-muted);
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
         }
 
-        .card.expanded .card-arrow {
-            transform: rotate(90deg);
-        }
-
-        .card-body {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s ease, padding 0.3s ease;
-        }
-
-        .card.expanded .card-body {
-            max-height: 2000px;
-            padding: 1.25rem 1.5rem;
+        .card:hover .card-arrow {
+            color: var(--accent);
+            transform: translateX(3px);
         }
 
         /* Detail Page Styles */
@@ -342,38 +418,39 @@
             gap: 0.5rem;
             padding: 0.5rem 1rem;
             border-radius: 50px;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 600;
             margin-bottom: 1rem;
+            transition: all 0.3s ease;
         }
 
         .detail-badge.danger {
             background: var(--danger-glow);
             color: var(--danger);
-            border: 1px solid rgba(255, 68, 119, 0.3);
+            border: 1px solid rgba(220, 38, 38, 0.2);
         }
 
         .detail-badge.warning {
             background: var(--warning-glow);
             color: var(--warning);
-            border: 1px solid rgba(255, 170, 34, 0.3);
+            border: 1px solid rgba(217, 119, 6, 0.2);
         }
 
         .detail-badge.success {
             background: var(--success-glow);
             color: var(--success);
-            border: 1px solid rgba(0, 255, 136, 0.3);
+            border: 1px solid rgba(5, 150, 105, 0.2);
         }
 
         .detail-title {
-            font-size: 1.75rem;
+            font-size: 1.65rem;
             font-weight: 800;
             line-height: 1.3;
             margin-bottom: 0.75rem;
         }
 
         .detail-desc {
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: var(--text-secondary);
             line-height: 1.7;
         }
@@ -384,22 +461,24 @@
             align-items: flex-start;
             gap: 1rem;
             padding: 1rem;
-            background: rgba(0, 0, 0, 0.2);
+            background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 14px;
+            border-radius: 16px;
             margin-bottom: 0.75rem;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
         }
 
         .list-item:hover {
             border-color: var(--border-strong);
-            transform: translateX(4px);
+            transform: translateX(5px);
+            background: var(--bg-card-hover);
         }
 
         .list-item-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -422,27 +501,30 @@
         .list-item-content h4 {
             font-size: 0.95rem;
             font-weight: 700;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.2rem;
         }
 
         .list-item-content p {
             font-size: 0.85rem;
             color: var(--text-secondary);
+            line-height: 1.5;
         }
 
         /* Scam Type Cards */
         .scam-card {
-            background: rgba(0, 0, 0, 0.3);
+            background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 16px;
+            border-radius: 18px;
             padding: 1.25rem;
             margin-bottom: 1rem;
             transition: all 0.3s ease;
+            box-shadow: var(--shadow);
         }
 
         .scam-card:hover {
             border-color: var(--danger);
-            box-shadow: 0 0 30px var(--danger-glow);
+            box-shadow: 0 0 25px var(--danger-glow), var(--shadow);
+            transform: translateY(-3px);
         }
 
         .scam-card-header {
@@ -453,8 +535,8 @@
         }
 
         .scam-card-header svg {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             color: var(--danger);
         }
 
@@ -464,15 +546,16 @@
         }
 
         .scam-card p {
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             color: var(--text-secondary);
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.85rem;
+            line-height: 1.6;
         }
 
         .scam-example {
-            background: rgba(255, 68, 119, 0.1);
-            border: 1px dashed rgba(255, 68, 119, 0.3);
-            border-radius: 8px;
+            background: var(--danger-glow);
+            border: 1px dashed var(--danger);
+            border-radius: 10px;
             padding: 0.75rem 1rem;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.8rem;
@@ -483,42 +566,42 @@
         .contacts-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
+            gap: 0.65rem;
             margin-top: 1rem;
         }
 
         .contact-card {
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid rgba(0, 255, 136, 0.2);
-            border-radius: 14px;
-            padding: 1rem;
+            background: var(--success-glow);
+            border: 1px solid rgba(5, 150, 105, 0.2);
+            border-radius: 16px;
+            padding: 1rem 0.5rem;
             text-align: center;
             transition: all 0.3s ease;
         }
 
         .contact-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 30px var(--success-glow);
+            box-shadow: 0 8px 25px var(--success-glow);
         }
 
         .contact-number {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 800;
             color: var(--success);
             font-family: 'JetBrains Mono', monospace;
         }
 
         .contact-label {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             color: var(--text-muted);
             margin-top: 0.25rem;
         }
 
         /* Share Section */
         .share-section {
-            background: linear-gradient(135deg, rgba(0, 229, 192, 0.1) 0%, rgba(0, 229, 192, 0.05) 100%);
-            border: 1px solid rgba(0, 229, 192, 0.2);
-            border-radius: 20px;
+            background: linear-gradient(135deg, var(--accent-glow) 0%, transparent 100%);
+            border: 1px solid var(--border);
+            border-radius: 22px;
             padding: 1.5rem;
             text-align: center;
             margin-top: 1.5rem;
@@ -531,7 +614,7 @@
         }
 
         .share-section p {
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             color: var(--text-secondary);
             margin-bottom: 1.25rem;
         }
@@ -554,7 +637,7 @@
 
         .share-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 40px rgba(37, 211, 102, 0.3);
+            box-shadow: 0 10px 35px rgba(37, 211, 102, 0.35);
         }
 
         .share-btn svg {
@@ -568,21 +651,22 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(180deg, transparent 0%, var(--bg-deep) 30%);
-            padding: 1rem;
+            background: linear-gradient(180deg, transparent 0%, var(--bg-deep) 40%);
+            padding: 0.75rem 1rem;
             z-index: 100;
         }
 
         .nav-container {
-            max-width: 400px;
+            max-width: 420px;
             margin: 0 auto;
             display: flex;
-            gap: 0.5rem;
-            background: var(--bg-card);
+            gap: 0.4rem;
+            background: var(--nav-bg);
             border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 0.5rem;
+            border-radius: 22px;
+            padding: 0.4rem;
             backdrop-filter: blur(20px);
+            box-shadow: var(--shadow);
         }
 
         .nav-item {
@@ -590,11 +674,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.25rem;
+            gap: 0.2rem;
             padding: 0.75rem 0.5rem;
             background: transparent;
             border: none;
-            border-radius: 14px;
+            border-radius: 16px;
             color: var(--text-muted);
             font-size: 0.65rem;
             font-weight: 600;
@@ -611,16 +695,16 @@
 
         .nav-item.active {
             background: var(--accent);
-            color: var(--bg-deep);
+            color: white;
         }
 
         .nav-item.active svg {
-            color: var(--bg-deep);
+            color: white;
         }
 
         .nav-item:hover:not(.active) {
             color: var(--text-primary);
-            background: rgba(0, 229, 192, 0.1);
+            background: var(--accent-glow);
         }
 
         /* Back Button */
@@ -628,11 +712,11 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            background: transparent;
+            background: var(--bg-card);
             border: 1px solid var(--border);
             color: var(--text-secondary);
-            padding: 0.6rem 1rem;
-            border-radius: 10px;
+            padding: 0.65rem 1rem;
+            border-radius: 12px;
             font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
@@ -644,6 +728,7 @@
         .back-btn:hover {
             border-color: var(--accent);
             color: var(--accent);
+            background: var(--accent-glow);
         }
 
         .back-btn svg {
@@ -654,7 +739,7 @@
         /* Responsive */
         @media (max-width: 480px) {
             .app-container {
-                padding: 70px 0.75rem 110px;
+                padding: 75px 0.75rem 105px;
             }
 
             .contacts-grid {
@@ -663,11 +748,15 @@
             }
 
             .contact-card {
-                padding: 0.75rem 0.5rem;
+                padding: 0.75rem 0.35rem;
             }
 
             .contact-number {
-                font-size: 0.95rem;
+                font-size: 0.9rem;
+            }
+
+            .logo-text {
+                display: none;
             }
         }
 
@@ -681,11 +770,11 @@
 
         /* Scrollbar */
         ::-webkit-scrollbar {
-            width: 6px;
+            width: 5px;
         }
 
         ::-webkit-scrollbar-track {
-            background: var(--bg-deep);
+            background: transparent;
         }
 
         ::-webkit-scrollbar-thumb {
@@ -711,10 +800,21 @@
                 </div>
                 <span class="logo-text" data-si="Phishing Alert" data-en="Phishing Alert" data-mix="Phishing Alert">Phishing Alert</span>
             </div>
-            <div class="lang-toggle">
-                <button class="lang-btn" onclick="setLanguage('si')" id="btn-si">සිංහල</button>
-                <button class="lang-btn active" onclick="setLanguage('mix')" id="btn-mix">Mix</button>
-                <button class="lang-btn" onclick="setLanguage('en')" id="btn-en">EN</button>
+            <div class="header-controls">
+                <div class="lang-toggle">
+                    <button class="lang-btn" onclick="setLanguage('si')" id="btn-si">සිංහල</button>
+                    <button class="lang-btn active" onclick="setLanguage('mix')" id="btn-mix">Mix</button>
+                    <button class="lang-btn" onclick="setLanguage('en')" id="btn-en">EN</button>
+                </div>
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/>
+                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
             </div>
         </div>
     </header>
@@ -725,7 +825,7 @@
         <div class="page active" id="page-home">
             <div class="warning-banner">
                 <h2>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <path d="M12 8v4m0 4h.01"/>
                     </svg>
@@ -767,8 +867,8 @@
                             </svg>
                         </div>
                         <div>
-                            <div class="card-title" data-si="සිදුවිය හැකි දේවල්" data-en="Possible Dangers" data-mix="සිදුවිය හැකි දේවල්">සිදුවිය හැකි දේවල්</div>
-                            <div class="card-subtitle" data-si="මුදල් සොරා ගැනීම, Hacking" data-en="Money theft, Hacking" data-mix="මුදල් සොරා ගැනීම, Hacking">මුදල් සොරා ගැනීම, Hacking</div>
+                            <div class="card-title" data-si="සිදුවිය හැකි අනතුරු" data-en="Possible Dangers" data-mix="සිදුවිය හැකි අනතුරු">සිදුවිය හැකි අනතුරු</div>
+                            <div class="card-subtitle" data-si="මුදල් සොරා ගැනීම, Hacking" data-en="Money theft, Hacking risks" data-mix="මුදල් සොරා ගැනීම, Hacking">මුදල් සොරා ගැනීම, Hacking</div>
                         </div>
                     </div>
                     <svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -789,7 +889,7 @@
                         </div>
                         <div>
                             <div class="card-title" data-si="Scam වර්ග" data-en="Types of Scams" data-mix="Scam වර්ග">Scam වර්ග</div>
-                            <div class="card-subtitle" data-si="Free Data, Bank, Lottery Scams" data-en="Free Data, Bank, Lottery Scams" data-mix="Free Data, Bank, Lottery Scams">Free Data, Bank, Lottery Scams</div>
+                            <div class="card-subtitle" data-si="Free Data, Bank, Parcel, Job Scams" data-en="Free Data, Bank, Parcel, Job Scams" data-mix="Free Data, Bank, Parcel, Job Scams">Free Data, Bank, Parcel, Job Scams</div>
                         </div>
                     </div>
                     <svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -830,7 +930,7 @@
 
             <div class="detail-header">
                 <div class="detail-badge danger">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <path d="M12 8v4m0 4h.01"/>
                     </svg>
@@ -904,12 +1004,12 @@
 
             <div class="detail-header">
                 <div class="detail-badge warning">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
                     </svg>
                     <span data-si="අනතුරු ඇඟවීම" data-en="Danger Alert" data-mix="Danger Alert">Danger Alert</span>
                 </div>
-                <h1 class="detail-title" data-si="සිදුවිය හැකි දේවල්" data-en="Possible Dangers" data-mix="සිදුවිය හැකි දේවල්">සිදුවිය හැකි දේවල්</h1>
+                <h1 class="detail-title" data-si="සිදුවිය හැකි අනතුරු" data-en="Possible Dangers" data-mix="සිදුවිය හැකි අනතුරු">සිදුවිය හැකි අනතුරු</h1>
                 <p class="detail-desc" data-si="Scammers ඔබව පහසුවෙන් රැවටීමට උත්සාහ කරන ආකාරය:" data-en="How scammers try to trick you:" data-mix="Scammers ඔබව පහසුවෙන් රැවටීමට උත්සාහ කරන ආකාරය:">
                     Scammers ඔබව පහසුවෙන් රැවටීමට උත්සාහ කරන ආකාරය:
                 </p>
@@ -965,6 +1065,19 @@
                     <p data-si="ඔබේ නමින් නීතිවිරෝධී වැඩ කිරීම" data-en="Illegal activities in your name" data-mix="ඔබේ නමින් නීතිවිරෝධී වැඩ කිරීම">ඔබේ නමින් නීතිවිරෝධී වැඩ කිරීම</p>
                 </div>
             </div>
+
+            <div class="list-item">
+                <div class="list-item-icon warning">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M1 12h22M12 1a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+                    </svg>
+                </div>
+                <div class="list-item-content">
+                    <h4 data-si="Data Selling" data-en="Data Selling" data-mix="Data Selling">Data Selling</h4>
+                    <p data-si="ඔබේ personal data dark web එකේ විකිණීම" data-en="Your personal data sold on dark web" data-mix="ඔබේ personal data dark web එකේ විකිණීම">ඔබේ personal data dark web එකේ විකිණීම</p>
+                </div>
+            </div>
         </div>
 
         <!-- Scam Types Page -->
@@ -978,7 +1091,7 @@
 
             <div class="detail-header">
                 <div class="detail-badge danger">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                     </svg>
                     <span data-si="හඳුනා ගන්න" data-en="Identify Them" data-mix="Identify Them">Identify Them</span>
@@ -989,6 +1102,7 @@
                 </p>
             </div>
 
+            <!-- Scam 1: Free Data -->
             <div class="scam-card">
                 <div class="scam-card-header">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -997,12 +1111,13 @@
                     </svg>
                     <h4 data-si="Free Data Offers" data-en="Free Data Offers" data-mix="Free Data Offers">Free Data Offers</h4>
                 </div>
-                <p data-si='"50GB Free", "100GB for New Year" - කිසිවිටෙකත් සැබෑ නැත!' data-en='"50GB Free", "100GB for New Year" - Never real!' data-mix='"50GB Free", "100GB for New Year" - කිසිවිටෙකත් සැබෑ නැත!'>
-                    "50GB Free", "100GB for New Year" - කිසිවිටෙකත් සැබෑ නැත!
+                <p data-si='"50GB Free", "100GB for New Year" - Dialog, Mobitel වැනි company කිසිවිටෙකත් මෙවැනි offers දෙන්නේ නැත!' data-en='"50GB Free", "100GB for New Year" - Companies like Dialog, Mobitel never give such offers!' data-mix='"50GB Free", "100GB for New Year" - Dialog, Mobitel වැනි company කිසිවිටෙකත් මෙවැනි offers දෙන්නේ නැත!'>
+                    "50GB Free", "100GB for New Year" - Dialog, Mobitel වැනි company කිසිවිටෙකත් මෙවැනි offers දෙන්නේ නැත!
                 </p>
-                <div class="scam-example">"Vesak Special 50GB Free!"</div>
+                <div class="scam-example">"Vesak Special 50GB Free - Click Now!"</div>
             </div>
 
+            <!-- Scam 2: Fake Bank -->
             <div class="scam-card">
                 <div class="scam-card-header">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1011,12 +1126,29 @@
                     </svg>
                     <h4 data-si="Fake Bank Messages" data-en="Fake Bank Messages" data-mix="Fake Bank Messages">Fake Bank Messages</h4>
                 </div>
-                <p data-si='"Account blocked", "Verify now" - බැංකු WhatsApp/Email හරහා තොරතුරු අහන්නේ නැත!' data-en='"Account blocked", "Verify now" - Banks never ask via WhatsApp/Email!' data-mix='"Account blocked", "Verify now" - බැංකු WhatsApp/Email හරහා තොරතුරු අහන්නේ නැත!'>
-                    "Account blocked", "Verify now" - බැංකු WhatsApp/Email හරහා තොරතුරු අහන්නේ නැත!
+                <p data-si='"Account blocked", "Verify now" - බැංකු කිසිදා WhatsApp/Email හරහා OTP හෝ Password ඉල්ලන්නේ නැත!' data-en='"Account blocked", "Verify now" - Banks never ask for OTP or Password via WhatsApp/Email!' data-mix='"Account blocked", "Verify now" - බැංකු කිසිදා WhatsApp/Email හරහා OTP හෝ Password ඉල්ලන්නේ නැත!'>
+                    "Account blocked", "Verify now" - බැංකු කිසිදා WhatsApp/Email හරහා OTP හෝ Password ඉල්ලන්නේ නැත!
                 </p>
-                <div class="scam-example">"Your account will be blocked in 24 hours!"</div>
+                <div class="scam-example">"Your BOC account will be blocked in 24 hours!"</div>
             </div>
 
+            <!-- Scam 3: Parcel Delivery -->
+            <div class="scam-card">
+                <div class="scam-card-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                        <line x1="12" y1="22.08" x2="12" y2="12"/>
+                    </svg>
+                    <h4 data-si="Parcel Delivery Scams" data-en="Parcel Delivery Scams" data-mix="Parcel Delivery Scams">Parcel Delivery Scams</h4>
+                </div>
+                <p data-si='"Your parcel is stuck at customs", "Pay Rs.2500 to release" - ඔබ ඇණවුමක් නොදන්නා නම් මෙය scam එකකි!' data-en='"Your parcel is stuck at customs", "Pay Rs.2500 to release" - If you did not order, this is a scam!' data-mix='"Your parcel is stuck at customs", "Pay Rs.2500 to release" - ඔබ ඇණවුමක් නොදන්නා නම් මෙය scam එකකි!'>
+                    "Your parcel is stuck at customs", "Pay Rs.2500 to release" - ඔබ ඇණවුමක් නොදන්නා නම් මෙය scam එකකි!
+                </p>
+                <div class="scam-example">"DHL: Your package arrived. Pay Rs.1500 duty fee."</div>
+            </div>
+
+            <!-- Scam 4: Lottery -->
             <div class="scam-card">
                 <div class="scam-card-header">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1025,26 +1157,28 @@
                     </svg>
                     <h4 data-si="Lottery / Prize Scams" data-en="Lottery / Prize Scams" data-mix="Lottery / Prize Scams">Lottery / Prize Scams</h4>
                 </div>
-                <p data-si='"You won iPhone!", "Lucky winner" - ඔබ තරඟයකට සහභාගී නොවී දිනීම කළ නොහැක!' data-en='"You won iPhone!", "Lucky winner" - Cannot win without participating!' data-mix='"You won iPhone!", "Lucky winner" - ඔබ තරඟයකට සහභාගී නොවී දිනීම කළ නොහැක!'>
+                <p data-si='"You won iPhone!", "Lucky winner" - ඔබ තරඟයකට සහභාගී නොවී දිනීම කළ නොහැක! මුදල් ඉල්ලන ඕනෑම ත්‍යාගයක් scam!' data-en='"You won iPhone!", "Lucky winner" - Cannot win without participating! Any prize asking for money is a scam!' data-mix='"You won iPhone!", "Lucky winner" - ඔබ තරඟයකට සහභාගී නොවී දිනීම කළ නොහැක!'>
                     "You won iPhone!", "Lucky winner" - ඔබ තරඟයකට සහභාගී නොවී දිනීම කළ නොහැක!
                 </p>
-                <div class="scam-example">"Congratulations! You won Rs.500,000!"</div>
+                <div class="scam-example">"Congrats! You won Rs.500,000 from Dubai Lottery!"</div>
             </div>
 
+            <!-- Scam 5: Job -->
             <div class="scam-card">
                 <div class="scam-card-header">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
+                        <rect x="2" y="7" width="20" height="14" rx="2"/>
+                        <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
                     </svg>
                     <h4 data-si="Job Scams" data-en="Job Scams" data-mix="Job Scams">Job Scams</h4>
                 </div>
-                <p data-si='"Work from home, earn Rs.100,000" - මුලින් මුදල් ගෙවන්න කියන රැකියා scam!' data-en='"Work from home, earn Rs.100,000" - Jobs asking for upfront payment are scams!' data-mix='"Work from home, earn Rs.100,000" - මුලින් මුදල් ගෙවන්න කියන රැකියා scam!'>
-                    "Work from home, earn Rs.100,000" - මුලින් මුදල් ගෙවන්න කියන රැකියා scam!
+                <p data-si='"Work from home, earn Rs.100,000" - රැකියාවක් සඳහා මුලින් මුදල් ගෙවන්න කියන්නේ නම් එය scam!' data-en='"Work from home, earn Rs.100,000" - If a job asks for upfront payment, it is a scam!' data-mix='"Work from home, earn Rs.100,000" - රැකියාවක් සඳහා මුලින් මුදල් ගෙවන්න කියන්නේ නම් එය scam!'>
+                    "Work from home, earn Rs.100,000" - රැකියාවක් සඳහා මුලින් මුදල් ගෙවන්න කියන්නේ නම් එය scam!
                 </p>
-                <div class="scam-example">"Pay Rs.5000 registration fee to start earning!"</div>
+                <div class="scam-example">"Pay Rs.5000 for training materials to start earning!"</div>
             </div>
 
+            <!-- Scam 6: Romance -->
             <div class="scam-card">
                 <div class="scam-card-header">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1052,10 +1186,73 @@
                     </svg>
                     <h4 data-si="Love / Romance Scams" data-en="Love / Romance Scams" data-mix="Love / Romance Scams">Love / Romance Scams</h4>
                 </div>
-                <p data-si='Social media "ආදරවන්තයින්" - මුදල් ඉල්ලන ඕනෑම කෙනෙක් ගැන ප්‍රවේශම් වන්න!' data-en='Social media "lovers" - Be careful of anyone asking for money!' data-mix='Social media "ආදරවන්තයින්" - Be careful of anyone asking for money!'>
-                    Social media "ආදරවන්තයින්" - Be careful of anyone asking for money!
+                <p data-si='Social media "ආදරවන්තයින්" - මුදල් ඉල්ලන ඕනෑම අයෙක් ගැන සැක සහිතව සිටින්න! Video call කිරීමට අකමැති නම් scam!' data-en='Social media "lovers" - Be suspicious of anyone asking for money! If they refuse video calls, it is a scam!' data-mix='Social media "ආදරවන්තයින්" - මුදල් ඉල්ලන ඕනෑම අයෙක් ගැන සැක සහිතව සිටින්න!'>
+                    Social media "ආදරවන්තයින්" - මුදල් ඉල්ලන ඕනෑම අයෙක් ගැන සැක සහිතව සිටින්න!
                 </p>
-                <div class="scam-example">"I need money for flight ticket to meet you..."</div>
+                <div class="scam-example">"Baby I need money for flight ticket to see you..."</div>
+            </div>
+
+            <!-- Scam 7: Electricity Bill -->
+            <div class="scam-card">
+                <div class="scam-card-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                    <h4 data-si="Electricity / Water Bill Scams" data-en="Utility Bill Scams" data-mix="Utility Bill Scams">Electricity / Water Bill Scams</h4>
+                </div>
+                <p data-si='"Electricity will be disconnected", "Pay immediately" - CEB/WSDB කිසිවිටෙකත් WhatsApp හරහා ගෙවීම් ඉල්ලන්නේ නැත!' data-en='"Electricity will be disconnected", "Pay immediately" - CEB/WSDB never ask for payments via WhatsApp!' data-mix='"Electricity will be disconnected", "Pay immediately" - CEB/WSDB කිසිවිටෙකත් WhatsApp හරහා ගෙවීම් ඉල්ලන්නේ නැත!'>
+                    "Electricity will be disconnected", "Pay immediately" - CEB/WSDB කිසිවිටෙකත් WhatsApp හරහා ගෙවීම් ඉල්ලන්නේ නැත!
+                </p>
+                <div class="scam-example">"CEB: Your electricity will be cut in 2 hours. Pay Rs.8500 now."</div>
+            </div>
+
+            <!-- Scam 8: Investment -->
+            <div class="scam-card">
+                <div class="scam-card-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="1" x2="12" y2="23"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                    </svg>
+                    <h4 data-si="Investment Scams" data-en="Investment Scams" data-mix="Investment Scams">Investment Scams</h4>
+                </div>
+                <p data-si='"Double your money in 7 days", "Forex trading" - වේගයෙන් මුදල් උපයන්න කියන ඕනෑම investment එකක් scam!' data-en='"Double your money in 7 days", "Forex trading" - Any investment promising quick returns is a scam!' data-mix='"Double your money in 7 days", "Forex trading" - වේගයෙන් මුදල් උපයන්න කියන ඕනෑම investment එකක් scam!'>
+                    "Double your money in 7 days", "Forex trading" - වේගයෙන් මුදල් උපයන්න කියන ඕනෑම investment එකක් scam!
+                </p>
+                <div class="scam-example">"Invest Rs.10,000 today, get Rs.50,000 in 30 days!"</div>
+            </div>
+
+            <!-- Scam 9: QR Code -->
+            <div class="scam-card">
+                <div class="scam-card-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    <h4 data-si="QR Code Scams" data-en="QR Code Scams" data-mix="QR Code Scams">QR Code Scams</h4>
+                </div>
+                <p data-si='"Scan this QR to get free gift", "Scan to pay" - Unknown QR codes scan කිරීමෙන් money deduct විය හැක!' data-en='"Scan this QR to get free gift", "Scan to pay" - Scanning unknown QR codes can deduct money!' data-mix='"Scan this QR to get free gift", "Scan to pay" - Unknown QR codes scan කිරීමෙන් money deduct විය හැක!'>
+                    "Scan this QR to get free gift", "Scan to pay" - Unknown QR codes scan කිරීමෙන් money deduct විය හැක!
+                </p>
+                <div class="scam-example">"Scan this QR code to claim your Rs.5000 cashback!"</div>
+            </div>
+
+            <!-- Scam 10: Government Official -->
+            <div class="scam-card">
+                <div class="scam-card-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    <h4 data-si="Government Official Impersonation" data-en="Government Impersonation" data-mix="Government Impersonation">Government Official Impersonation</h4>
+                </div>
+                <p data-si='"Police case filed against you", "Tax evasion notice" - Government officials කිසිවිටෙකත් phone හරහා මුදල් ඉල්ලන්නේ නැත!' data-en='"Police case filed against you", "Tax evasion notice" - Government officials never ask for money over the phone!' data-mix='"Police case filed against you", "Tax evasion notice" - Government officials කිසිවිටෙකත් phone හරහා මුදල් ඉල්ලන්නේ නැත!'>
+                    "Police case filed against you", "Tax evasion notice" - Government officials කිසිවිටෙකත් phone හරහා මුදල් ඉල්ලන්නේ නැත!
+                </p>
+                <div class="scam-example">"This is CID. Pay Rs.100,000 fine or we will arrest you."</div>
             </div>
         </div>
 
@@ -1070,7 +1267,7 @@
 
             <div class="detail-header">
                 <div class="detail-badge success">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
                         <path d="M22 4L12 14.01l-3-3"/>
                     </svg>
@@ -1204,28 +1401,29 @@
         // State
         var currentPage = 'home';
         var currentLang = 'mix';
+        var currentTheme = 'light';
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             var savedLang = localStorage.getItem('phishing-lang') || 'mix';
+            var savedTheme = localStorage.getItem('phishing-theme') || 'light';
+            
             setLanguage(savedLang);
+            setTheme(savedTheme);
         });
 
         // Show Page
         function showPage(pageId) {
-            // Hide all pages
             var pages = document.querySelectorAll('.page');
             pages.forEach(function(page) {
                 page.classList.remove('active');
             });
 
-            // Show target page
             var targetPage = document.getElementById('page-' + pageId);
             if (targetPage) {
                 targetPage.classList.add('active');
             }
 
-            // Update navigation
             var navItems = document.querySelectorAll('.nav-item');
             navItems.forEach(function(item) {
                 item.classList.remove('active');
@@ -1237,8 +1435,6 @@
             }
 
             currentPage = pageId;
-
-            // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -1247,7 +1443,6 @@
             currentLang = lang;
             localStorage.setItem('phishing-lang', lang);
 
-            // Update button states
             var btnSi = document.getElementById('btn-si');
             var btnMix = document.getElementById('btn-mix');
             var btnEn = document.getElementById('btn-en');
@@ -1260,7 +1455,6 @@
             else if (lang === 'en') btnEn.classList.add('active');
             else btnMix.classList.add('active');
 
-            // Update all text elements
             var elements = document.querySelectorAll('[data-si][data-en][data-mix]');
             elements.forEach(function(el) {
                 var text = el.getAttribute('data-' + lang);
@@ -1268,6 +1462,27 @@
                     el.textContent = text;
                 }
             });
+        }
+
+        // Set Theme
+        function setTheme(theme) {
+            currentTheme = theme;
+            localStorage.setItem('phishing-theme', theme);
+
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        }
+
+        // Toggle Theme
+        function toggleTheme() {
+            if (currentTheme === 'light') {
+                setTheme('dark');
+            } else {
+                setTheme('light');
+            }
         }
 
         // Share on WhatsApp
