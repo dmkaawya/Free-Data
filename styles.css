@@ -82,6 +82,50 @@ body {
     50% { transform: translate(40px,-40px) scale(1.15); }
 }
 
+/* ========== TOAST ========== */
+#toast-container {
+    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+    z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    pointer-events: none; width: 90%; max-width: 400px;
+}
+.toast {
+    padding: 0.85rem 1.25rem; border-radius: 14px; font-size: 0.9rem; font-weight: 700;
+    display: flex; align-items: center; gap: 0.65rem; pointer-events: auto;
+    animation: toastIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2); backdrop-filter: blur(20px);
+    width: 100%; justify-content: center;
+}
+.toast.correct-toast {
+    background: linear-gradient(135deg, rgba(5,150,105,0.95), rgba(16,185,129,0.95));
+    color: #fff; border: 1px solid rgba(0,255,136,0.3);
+}
+.toast.wrong-toast {
+    background: linear-gradient(135deg, rgba(220,38,38,0.95), rgba(239,68,68,0.95));
+    color: #fff; border: 1px solid rgba(255,68,68,0.3);
+}
+.toast.info-toast {
+    background: linear-gradient(135deg, rgba(8,145,178,0.95), rgba(6,182,212,0.95));
+    color: #fff; border: 1px solid rgba(8,145,178,0.3);
+}
+.toast-icon { font-size: 1.3rem; flex-shrink: 0; }
+.toast-text { flex: 1; }
+.toast-score {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+    background: rgba(255,255,255,0.2); padding: 0.2rem 0.6rem;
+    border-radius: 8px; font-weight: 800; flex-shrink: 0;
+}
+.toast.removing { animation: toastOut 0.35s ease forwards; }
+
+@keyframes toastIn {
+    0% { opacity: 0; transform: translateY(-30px) scale(0.9); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toastOut {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-20px) scale(0.9); }
+}
+
+/* ========== HEADER ========== */
 .header {
     position: fixed; top: 0; left: 0; right: 0;
     background: linear-gradient(180deg, var(--bg-deep) 0%, transparent 100%);
@@ -101,26 +145,35 @@ body {
 }
 .logo-icon svg { width: 20px; height: 20px; color: white; }
 .logo-text { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-secondary); }
-.header-controls { display: flex; align-items: center; gap: 0.75rem; }
+.header-controls { display: flex; align-items: center; gap: 0.6rem; }
+
+.header-share-btn {
+    width: 40px; height: 40px; border-radius: 11px; border: 1px solid rgba(37,211,102,0.3);
+    background: rgba(37,211,102,0.1); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.3s ease;
+}
+.header-share-btn:hover { background: rgba(37,211,102,0.25); border-color: #25D366; transform: scale(1.08); }
+.header-share-btn svg { width: 18px; height: 18px; color: #25D366; }
 
 .theme-toggle {
-    width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--border);
+    width: 40px; height: 40px; border-radius: 11px; border: 1px solid var(--border);
     background: var(--bg-card); display: flex; align-items: center; justify-content: center;
     cursor: pointer; transition: all 0.3s ease;
 }
 .theme-toggle:hover { border-color: var(--accent); background: var(--accent-glow); }
-.theme-toggle svg { width: 20px; height: 20px; color: var(--text-secondary); transition: all 0.3s ease; }
+.theme-toggle svg { width: 18px; height: 18px; color: var(--text-secondary); transition: all 0.3s ease; }
 .theme-toggle:hover svg { color: var(--accent); }
 .sun-icon { display: block; } .moon-icon { display: none; }
 [data-theme="dark"] .sun-icon { display: none; } [data-theme="dark"] .moon-icon { display: block; }
 
 .lang-toggle { display: flex; gap: 0.2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 3px; }
 .lang-btn {
-    padding: 0.45rem 0.75rem; background: transparent; border: none; color: var(--text-muted);
-    font-size: 0.75rem; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.25s ease; font-family: inherit;
+    padding: 0.4rem 0.6rem; background: transparent; border: none; color: var(--text-muted);
+    font-size: 0.7rem; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.25s ease; font-family: inherit;
 }
 .lang-btn.active { background: var(--accent); color: white; }
 
+/* ========== MAIN ========== */
 .app-container { position: relative; z-index: 1; max-width: 600px; margin: 0 auto; padding: 85px 1rem 120px; min-height: 100vh; }
 
 .page { display: none; opacity: 0; transform: translateY(15px); }
@@ -285,8 +338,9 @@ body {
 }
 .quiz-option:hover { border-color: var(--accent); background: var(--accent-glow); }
 .quiz-option.selected { border-color: var(--accent); background: var(--accent-glow); }
-.quiz-option.correct { border-color: var(--success); background: var(--success-glow); }
-.quiz-option.wrong { border-color: var(--danger); background: var(--danger-glow); }
+.quiz-option.correct { border-color: var(--success); background: var(--success-glow); cursor: default; }
+.quiz-option.wrong { border-color: var(--danger); background: var(--danger-glow); cursor: default; }
+.quiz-option.disabled { cursor: default; opacity: 0.6; }
 .quiz-option-letter {
     width: 28px; height: 28px; border-radius: 8px; background: var(--bg-secondary);
     display: flex; align-items: center; justify-content: center; font-size: 0.78rem;
@@ -405,8 +459,6 @@ body {
 .progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
 .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--success)); border-radius: 4px; transition: width 0.5s ease; }
 
-.scam-card.hidden { display: none; }
-
 @media (max-width: 480px) {
     .app-container { padding: 75px 0.75rem 105px; }
     .contacts-grid { gap: 0.5rem; }
@@ -417,6 +469,11 @@ body {
     .stat-number { font-size: 1.1rem; }
     .compare-row { grid-template-columns: 1fr; }
     .nav-item { font-size: 0.55rem; padding: 0.55rem 0.2rem; }
+    .lang-btn { font-size: 0.65rem; padding: 0.35rem 0.5rem; }
+    .header-share-btn { width: 36px; height: 36px; }
+    .header-share-btn svg { width: 16px; height: 16px; }
+    .theme-toggle { width: 36px; height: 36px; }
+    .theme-toggle svg { width: 16px; height: 16px; }
 }
 
 ::-webkit-scrollbar { width: 5px; }
