@@ -3,29 +3,6 @@ var currentLang = 'mix';
 var currentFilter = 'all';
 var checkedItems = new Set();
 var quizAnswers = {};
-var quizCorrectCount = 0;
-
-// ========== TOAST SYSTEM ==========
-function showToast(type, text, scoreText) {
-    var container = document.getElementById('toast-container');
-    if (!container) return;
-    var toast = document.createElement('div');
-    toast.className = 'toast ' + type + '-toast';
-    var iconMap = { correct: '\u2714\uFE0F', wrong: '\u274C', info: '\u2139\uFE0F' };
-    var html = '<span class="toast-icon">' + (iconMap[type] || '') + '</span>';
-    html += '<span class="toast-text">' + text + '</span>';
-    if (scoreText) {
-        html += '<span class="toast-score">' + scoreText + '</span>';
-    }
-    toast.innerHTML = html;
-    container.appendChild(toast);
-    setTimeout(function() {
-        toast.classList.add('removing');
-        setTimeout(function() {
-            if (toast.parentNode) toast.parentNode.removeChild(toast);
-        }, 350);
-    }, 2200);
-}
 
 // ========== LANGUAGE ==========
 function setLanguage(lang) {
@@ -55,16 +32,20 @@ function toggleTheme() {
 
 // ========== NAVIGATION ==========
 function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.page').forEach(function(p) {
+        p.classList.remove('active');
+    });
     var target = document.getElementById('page-' + pageId);
     if (target) target.classList.add('active');
+
     document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
     var navTarget = document.getElementById('nav-' + pageId);
     if (navTarget) navTarget.classList.add('active');
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ========== SCAMS DATA (70+) ==========
+// ========== SCAMS DATA (50+) ==========
 var scamsData = [
     {cat:"phone",title:{si:"Free Data Offers",en:"Free Data Offers",mix:"Free Data Offers"},desc:{si:'"50GB Free" - Dialog, Mobitel වැනි company මෙවැනි offers දෙන්නේ නැත!',en:'"50GB Free" - Telecom companies never give such offers!',mix:'"50GB Free" - Dialog, Mobitel වැනි company මෙවැනි offers දෙන්නේ නැත!'},example:"Vesak Special 50GB Free - Click Now!"},
     {cat:"money",title:{si:"Fake Bank Messages",en:"Fake Bank Messages",mix:"Fake Bank Messages"},desc:{si:'"Account blocked" - බැංකු WhatsApp හරහා OTP ඉල්ලන්නේ නැත!',en:'"Account blocked" - Banks never ask for OTP via WhatsApp!',mix:'"Account blocked" - බැංකු WhatsApp හරහා OTP ඉල්ලන්නේ නැත!'},example:"Your BOC account will be blocked in 24 hours!"},
@@ -110,7 +91,7 @@ var scamsData = [
     {cat:"money",title:{si:"Stock Tips Scams",en:"Stock Tips Scams",mix:"Stock Tips Scams"},desc:{si:'"Guaranteed stock tips" - paid group වලට join කරන්න කියනවා',en:'"Guaranteed stock tips" - They want you to join paid groups',mix:'"Guaranteed stock tips" - paid group වලට join කරන්න කියනවා'},example:"Predicted 10 stocks correctly! Join VIP group Rs.10,000/month."},
     {cat:"gov",title:{si:"Scholarship Scams",en:"Scholarship Scams",mix:"Scholarship Scams"},desc:{si:'"Free scholarship" - processing fee ඉල්ලනවා',en:'"Free scholarship" - They ask for processing fee',mix:'"Free scholarship" - processing fee ඉල්ලනවා'},example:"You won a Rs.500,000 scholarship. Pay Rs.5000 to claim."},
     {cat:"online",title:{si:"Domain Spoofing",en:"Domain Spoofing",mix:"Domain Spoofing"},desc:{si:'Real domains වගේ fake domains - හරියට බලන්න',en:'Fake domains that look real - Check carefully',mix:'Real domains වගේ fake domains - හරියට බලන්න'},example:"www.dialog.lk-update.com (fake - real is dialog.lk)"},
-    {cat:"social",title:{si:"Hacked Account Blackmail",en:"Hacked Account Blackmail",mix:"Hacked Account Blackmail"},desc:{si:"යහළුවෙක්ගේ account hack කරලා ඔබව blackmail කරනවා",en:"Hack friend's account and blackmail you with your data",mix:"යහළුවෙක්ගේ account hack කරලා ඔබව blackmail කරනවා"},example:"I have your private photos. Pay Rs.50,000 or I will share them."},
+    {cat:"social",title:{si:"Hacked Account Blackmail",en:"Hacked Account Blackmail",mix:"Hacked Account Blackmail"},desc:{si:'යහළුවෙක්ගේ account hack කරලා ඔබව blackmail කරනවා',en:"Hack friend's account and blackmail you with your data",mix:'යහළුවෙක්ගේ account hack කරලා ඔබව blackmail කරනවා'},example:"I have your private photos. Pay Rs.50,000 or I will share them."},
     {cat:"money",title:{si:"Real Estate Scams",en:"Real Estate Scams",mix:"Real Estate Scams"},desc:{si:'"Cheap land/house" - මුදල් ගෙවලා අයෙක් නැති වෙනවා',en:'"Cheap land/house" - After payment, seller disappears',mix:'"Cheap land/house" - මුදල් ගෙවලා අයෙක් නැති වෙනවා'},example:"Beachfront land Rs.500,000 per perch! Only 5 left!"},
     {cat:"online",title:{si:"Account Recovery Scams",en:"Account Recovery Scams",mix:"Account Recovery Scams"},desc:{si:'"Recover hacked account" - ඔබේ passwords steal කරනවා',en:'"Recover hacked account" - They steal your passwords',mix:'"Recover hacked account" - passwords steal කරනවා'},example:"Facebook hacked? We can recover it! Send your login details."},
     {cat:"phone",title:{si:"AI Voice Cloning",en:"AI Voice Cloning",mix:"AI Voice Cloning"},desc:{si:"AI මගින් ඥාතීන්ගේ ස්වරය copy කරලා call කරනවා",en:"AI clones your relative's voice and calls you",mix:"AI මගින් ඥාතීන්ගේ ස්වරය copy කරලා call කරනවා"},example:"(Voice like your son) Mom, I had an accident. Send Rs.100,000."},
@@ -119,33 +100,7 @@ var scamsData = [
     {cat:"social",title:{si:"Live Stream Scams",en:"Live Stream Scams",mix:"Live Stream Scams"},desc:{si:'"Live giveaway" - real time වල scam කරනවා',en:'"Live giveaway" - Scamming people in real time',mix:'"Live giveaway" - real time වල scam කරනවා'},example:"LIVE: Giving away Rs.100,000! Send Rs.1000 to enter!"},
     {cat:"money",title:{si:"Insurance Scams",en:"Insurance Scams",mix:"Insurance Scams"},desc:{si:'"Fake insurance policies" - premium ගෙවලා claim කරන්න දෙන්නේ නැත',en:'"Fake insurance" - They take premiums but never pay claims',mix:'"Fake insurance" - premium ගෙවලා claim කරන්න දෙන්නේ නැත'},example:"Get full life insurance for just Rs.500/month! No medical checkup!"},
     {cat:"online",title:{si:"Screen Mirroring Scams",en:"Screen Mirroring Scams",mix:"Screen Mirroring Scams"},desc:{si:'"Share your screen" කියලා OTP සහ passwords steal කරනවා',en:'"Share your screen" - They steal OTP and passwords',mix:'"Share your screen" කියලා OTP සහ passwords steal කරනවා'},example:"Bank support: Please share your screen so we can fix your issue."},
-    {cat:"phone",title:{si:"Wangiri Scams",en:"Wangiri Scams",mix:"Wangiri Scams"},desc:{si:'ජාත්‍යන්තර numbers වලින් එක ring - call back කළොත් මුදල් වැයේ',en:'International numbers ring once - Calling back costs money',mix:'ජාත්‍යන්තර numbers වලින් එක ring - call back කළොත් මුදල් වැයේ'},example:"+243 987654 - Rings once from unknown country code"},
-    {cat:"money",title:{si:"Fake Payment Proof Scams",en:"Fake Payment Proof Scams",mix:"Fake Payment Proof Scams"},desc:{si:'Photoshop කරපු bank transfer screenshots පෙන්නනවා',en:'Photoshopped bank transfer screenshots as proof',mix:'Photoshop කරපු bank transfer screenshots පෙන්නනවා'},example:"See, I transferred Rs.50,000! Now send my commission Rs.5000."},
-    {cat:"online",title:{si:"Cookie Stealing Scams",en:"Cookie Stealing Scams",mix:"Cookie Stealing Scams"},desc:{si:'"Login again" කියලා session cookies steal කරනවා',en:'"Login again" - They steal your session cookies',mix:'"Login again" කියලා session cookies steal කරනවා'},example:"Your session expired. Click here to re-login securely."},
-    {cat:"social",title:{si:"Fake Review Scams",en:"Fake Review Scams",mix:"Fake Review Scams"},desc:{si:'බොරු 5-star reviews දලා නිෂ්පාදනය වෙනස් කරනවා',en:'Fake 5-star reviews to manipulate product ratings',mix:'බොරු 5-star reviews දලා නිෂ්පාදනය වෙනස් කරනවා'},example:"This product has 5000 5-star reviews (all fake accounts)"},
-    {cat:"phone",title:{si:"USSD Code Scams",en:"USSD Code Scams",mix:"USSD Code Scams"},desc:{si:'"Dial *123#" කියලා money activate කරනවා',en:'"Dial *123#" - They activate money deduction',mix:'"Dial *123#" කියලා money activate කරනවා'},example:"Dial *321*10# to activate your free data bonus now!"},
-    {cat:"money",title:{si:"Binary Options Scams",en:"Binary Options Scams",mix:"Binary Options Scams"},desc:{si:'"Predict market movement" - ඔබේ මුදල් සම්පූර්ණයෙන් අහිමි කරනවා',en:'"Predict market movement" - They take all your money',mix:'"Predict market movement" - ඔබේ මුදල් සම්පූර්ණයෙන් අහිමි කරනවා'},example:"Win 95% of trades! Deposit just $250 to start!"},
-    {cat:"online",title:{si:"Fake Captcha Scams",en:"Fake Captcha Scams",mix:"Fake Captcha Scams"},desc:{si:'"Verify you are human" - fake captcha එකක් click කරනවා',en:'"Verify you are human" - Clicking fake captcha installs malware',mix:'"Verify you are human" - fake captcha එකක් click කරනවා'},example:"Click all images with traffic lights to verify (hidden download link)"},
-    {cat:"social",title:{si:"Pet Adoption Scams",en:"Pet Adoption Scams",mix:"Pet Adoption Scams"},desc:{si:'"Free puppy" කියලා shipping fee ඉල්ලනවා',en:'"Free puppy" - They ask for shipping fees',mix:'"Free puppy" කියලා shipping fee ඉල්ලනවා'},example:"This golden retriever puppy is free! Just pay Rs.15,000 for shipping."},
-    {cat:"money",title:{si:"Debt Relief Scams",en:"Debt Relief Scams",mix:"Debt Relief Scams"},desc:{si:'"Erase your debt" - මුලින් fee ගෙවලා නැති වෙනවා',en:'"Erase your debt" - They take upfront fee then disappear',mix:'"Erase your debt" - මුලින් fee ගෙවලා නැති වෙනවා'},example:"We can eliminate your credit card debt! Pay Rs.3000 registration fee."},
-    {cat:"phone",title:{si:"Flubot Malware Scams",en:"Flubot Malware Scams",mix:"Flubot Malware Scams"},desc:{si:'"Track your parcel" app download කරන්න කියලා malware දානවා',en:'"Track your parcel" - Downloading installs Flubot malware',mix:'"Track your parcel" app download කරන්න කියලා malware දානවා'},example:"Install our tracking app to see your delivery in real-time!"},
-    {cat:"online",title:{si:"Search Engine Poisoning",en:"Search Engine Poisoning",mix:"Search Engine Poisoning"},desc:{si:'Google වල first results වල fake sites show කරනවා',en:'Fake sites appear in Google first results',mix:'Google වල first results වල fake sites show කරනවා'},example:"Searching "BOC login" shows fake site as first result"},
-    {cat:"social",title:{si:"Grief Scams",en:"Grief Scams",mix:"Grief Scams"},desc:{si:'මියගිය අයගේ account භාවිතා කරලා මුදල් ඉල්ලනවා',en:'Using deceased person\'s account to ask for money',mix:'මියගිය අයගේ account භාවිතා කරලා මුදල් ඉල්ලනවා'},example:"Please help with funeral expenses. My father just passed away."},
-    {cat:"money",title:{si:"NFT / Digital Asset Scams",en:"NFT / Digital Asset Scams",mix:"NFT / Digital Asset Scams"},desc:{si:'"Buy valuable NFTs" - fake digital assets විකුණනවා',en:'"Buy valuable NFTs" - Selling fake digital assets',mix:'"Buy valuable NFTs" - fake digital assets විකුණනවා'},example:"Buy this rare NFT for Rs.5000! It will be worth Rs.500,000 next month!"},
-    {cat:"gov",title:{si:"COVID / Health Scams",en:"COVID / Health Scams",mix:"COVID / Health Scams"},desc:{si:'"Free COVID test kits" - personal data collect කරනවා',en:'"Free COVID test kits" - They collect your personal data',mix:'"Free COVID test kits" - personal data collect කරනවා'},example:"Get your free COVID-19 test kit delivered! Enter your NIC and address."},
-    {cat:"online",title:{si:"Deepfake Video Scams",en:"Deepfake Video Scams",mix:"Deepfake Video Scams"},desc:{si:'AI මගින් fake videos හදලා මුදල් ඉල්ලනවා',en:'AI creates fake videos to trick you into sending money',mix:'AI මගින් fake videos හදලා මුදල් ඉල්ලනවා'},example:"Watch this video of famous person recommending this investment platform!"},
-    {cat:"phone",title:{si:"Premium Rate SMS Scams",en:"Premium Rate SMS Scams",mix:"Premium Rate SMS Scams"},desc:{si:'"Reply YES to win" - premium rate SMS subscribe කරනවා',en:'"Reply YES to win" - Subscribes you to premium rate SMS',mix:'"Reply YES to win" - premium rate SMS subscribe කරනවා'},example:"Reply YES to claim your free mobile recharge of Rs.500!"},
-    {cat:"social",title:{si:"Family Emergency Scams",en:"Family Emergency Scams",mix:"Family Emergency Scams"},desc:{si:'"Your son is in hospital" කියලා වහාම මුදල් ඉල්ලනවා',en:'"Your son is in hospital" - Creating panic to get money',mix:'"Your son is in hospital" කියලා වහාම මුදල් ඉල්ලනවා'},example:"Your son met with an accident. We need Rs.50,000 for surgery immediately."},
-    {cat:"money",title:{si:"Cash App / E-Wallet Scams",en:"Cash App / E-Wallet Scams",mix:"Cash App / E-Wallet Scams"},desc:{si:'"Send me $5, I will send back $50" - මුදල් ආපසු එන්නේ නැත',en:'"Send me $5, I will send back $50" - Money never comes back',mix:'"Send me $5, I will send back $50" - මුදල් ආපසු එන්නේ නැත'},example:"Cash app glitch! Send Rs.500 and receive Rs.5000 instantly!"},
-    {cat:"online",title:{si:"Keylogger Scams",en:"Keylogger Scams",mix:"Keylogger Scams"},desc:{si:'Hidden keyloggers මගින් ඔබේ keystrokes record කරනවා',en:'Hidden keyloggers record all your keystrokes',mix:'Hidden keyloggers මගින් ඔබේ keystrokes record කරනවා'},example:"Download this free typing speed tester! (contains hidden keylogger)"},
-    {cat:"social",title:{si:"Fake Miracle Scams",en:"Fake Miracle Scams",mix:"Fake Miracle Scams"},desc:{si:'"Pray and send offering" - විශ්වාසයෙන් මුදල් ඉල්ලනවා',en:'"Pray and send offering" - Using religion to get money',mix:'"Pray and send offering" - විශ්වාසයෙන් මුදල් ඉල්ලනවා'},example:"Send Rs.1000 offering and receive blessings + wealth within 7 days!"},
-    {cat:"phone",title:{si:"Caller ID Spoofing",en:"Caller ID Spoofing",mix:"Caller ID Spoofing"},desc:{si:'Bank number එකක් වගේ call එනවා - real number එක නෙමේය',en:'Calls from fake bank numbers - Not the real number',mix:'Bank number එකක් වගේ call එනවා - real number එක නෙමේය'},example:"Incoming call shows: BOC Head Office (011-2844444) - but it is fake!"},
-    {cat:"online",title:{si:"Social Engineering Quiz Scams",en:"Social Engineering Quiz Scams",mix:"Social Engineering Quiz Scams"},desc:{si:'"What is your password?" quiz වලින් passwords හොයනවා',en:'"What is your password?" - Quizzes designed to steal info',mix:'"What is your password?" quiz වලින් passwords හොයනවා'},example:"Security quiz: What was your first pet's name? (security question answer)"},
-    {cat:"money",title:{si:"Holiday / Travel Scams",en:"Holiday / Travel Scams",mix:"Holiday / Travel Scams"},desc:{si:'"Maldives trip Rs.10,000" - fake travel packages විකුණනවා',en:'"Maldives trip Rs.10,000" - Fake travel packages',mix:'"Maldives trip Rs.10,000" - fake travel packages විකුණනවා'},example:"5-star Maldives package only Rs.15,000 per person! Book now!"},
-    {cat:"gov",title:{si:"Fake Police Reports",en:"Fake Police Reports",mix:"Fake Police Reports"},desc:{si:'"You are named in a case" - බිය ගුලු කරලා මුදල් ඉල්ලනවා',en:'"You are named in a case" - Creating fear to get money',mix:'"You are named in a case" - බිය ගුලු කරලා මුදල් ඉල්ලනවා'},example:"Your name appears in a cybercrime case. Call this number immediately to resolve."},
-    {cat:"social",title:{si:"Pharma / Medicine Scams",en:"Pharma / Medicine Scams",mix:"Pharma / Medicine Scams"},desc:{si:'"Miracle weight loss pills" - unapproved medicines විකුණනවා',en:'"Miracle weight loss pills" - Selling unapproved medicines',mix:'"Miracle weight loss pills" - unapproved medicines විකුණනවා'},example:"Lose 10kg in 7 days with this miracle pill! Only Rs.2500!"},
-    {cat:"online",title:{si:"DNS Hijacking Scams",en:"DNS Hijacking Scams",mix:"DNS Hijacking Scams"},desc:{si:'DNS settings වෙනස් කරලා traffic redirect කරනවා',en:'DNS settings changed to redirect your traffic',mix:'DNS settings වෙනස් කරලා traffic redirect කරනවා'},example:"Your internet connection needs to be verified. Change your DNS settings now!"},
-    {cat:"phone",title:{si:"WhatsApp Call Scams",en:"WhatsApp Call Scams",mix:"WhatsApp Call Scams"},desc:{si:'WhatsApp එකෙන් international video calls එනවා - malware spread කරනවා',en:'WhatsApp international video calls spread malware',mix:'WhatsApp එකෙන් international video calls - malware spread කරනවා'},example:"WhatsApp video call from unknown international number - do not answer!"}
+    {cat:"phone",title:{si:"Wangiri Scams",en:"Wangiri Scams",mix:"Wangiri Scams"},desc:{si:'ජාත්‍යන්තර numbers වලින් එක ring - call back කළොත් මුදල් වැයේ',en:'International numbers ring once - Calling back costs money',mix:'ජාත්‍යන්තර numbers වලින් එක ring - call back කළොත් මුදල් වැයේ'},example:"+243 987654 - Rings once from unknown country code"}
 ];
 
 // ========== RENDER SCAMS ==========
@@ -165,8 +120,9 @@ function renderScams() {
     if (!container) return;
     var search = document.getElementById('scam-search');
     var query = search ? search.value.toLowerCase() : '';
+
     var html = '';
-    scamsData.forEach(function(scam) {
+    scamsData.forEach(function(scam, i) {
         if (currentFilter !== 'all' && scam.cat !== currentFilter) return;
         var t = scam.title[currentLang] || scam.title['mix'];
         var d = scam.desc[currentLang] || scam.desc['mix'];
@@ -174,9 +130,13 @@ function renderScams() {
         html += '<div class="scam-card" data-cat="' + scam.cat + '">' +
             '<div class="scam-card-header">' + getScamIcon(scam.cat) + '<h4>' + t + '</h4></div>' +
             '<p>' + d + '</p>' +
-            '<div class="scam-example">' + scam.example + '</div></div>';
+            '<div class="scam-example">' + scam.example + '</div>' +
+            '</div>';
     });
-    if (!html) html = '<div style="text-align:center;padding:2rem;color:var(--text-muted);">No scams found</div>';
+
+    if (!html) {
+        html = '<div style="text-align:center;padding:2rem;color:var(--text-muted);">No scams found</div>';
+    }
     container.innerHTML = html;
     document.getElementById('stat-scams').textContent = scamsData.length + '+';
 }
@@ -196,7 +156,7 @@ var redFlagsData = [
     {icon:"\u23F0",text:{si:"ඉක්මන් ක්‍රියා කරන්න කියනවා",en:"Urgency / Pressure",mix:"ඉක්මන් ක්‍රියා කරන්න කියනවා"},desc:{si:"\"24 hours ඇතුළේ\" කියලා බිය ගුලු කරනවා",en:"\"Within 24 hours\" - creating fear and urgency",mix:"\"24 hours ඇතුළේ\" කියලා බිය ගුලු කරනවා"}},
     {icon:"\uD83D\uDCB8",text:{si:"මුදල් / OTP ඉල්ලනවා",en:"Asking for Money / OTP",mix:"මුදල් / OTP ඉල්ලනවා"},desc:{si:"කිසිම legitimate service එකක් OTP හරහා මුදල් ඉල්ලන්නේ නැත",en:"No legitimate service asks for OTP or money via messages",mix:"කිසිම legitimate service එකක් OTP හරහා මුදල් ඉල්ලන්නේ නැත"}},
     {icon:"\uD83D\uDCF1",text:{si:"WhatsApp හරහා official messages",en:"Official Messages via WhatsApp",mix:"WhatsApp හරහා official messages"},desc:{si:"බැංකු, CEB, IRD කිසිදා WhatsApp හරහා messages යවන්නේ නැත",en:"Banks, CEB, IRD never send messages via WhatsApp",mix:"බැංකු, CEB, IRD කිසිදා WhatsApp හරහා messages යවන්නේ නැත"}},
-    {icon:"\uD83C\uDFAF",text:{si:"තරඟයකට සහභාගී නොවූ ත්‍යාග",en:"Prizes Without Participation",mix:"තරඟයකට සහභාගී නොවූ ත්‍යාග"},desc:{si:"කිසිදා තරඟයකට සහභාගී නොවී ත්‍යාග දිනන්නේ නැත",en:"You cannot win a prize without participating",mix:"කිසිදා තරඟයකට සහභාගී නොවී ත්‍යාග දිනන්නේ නැත"}},
+    {icon:"\uD83C\uDFAF",text:{si:"තරඟයකට සහභාගී නොවූ ත්‍යාග",en:"Prizes Without Participation",mix:"තරඟයකට සහභාගී නොවූ ත්‍යාග"},desc:{si:"කිසිදා කිසිමෝ තරඟයකට සහභාගී නොවී ත්‍යාග දිනන්නේ නැත",en:"You cannot win a prize without participating in anything",mix:"කිසිදා තරඟයකට සහභාගී නොවී ත්‍යාග දිනන්නේ නැත"}},
     {icon:"\uD83D\uDD0D",text:{si:"Grammar / Spelling දෝෂ",en:"Grammar / Spelling Errors",mix:"Grammar / Spelling දෝෂ"},desc:{si:"Official messages වල spelling mistakes බහුල වෙන්නේ නැත",en:"Official messages rarely have spelling mistakes",mix:"Official messages වල spelling mistakes බහුල වෙන්නේ නැත"}},
     {icon:"\u2728",text:{si:"අවිශ්‍යයෙන් වැඩි returns කියනවා",en:"Unrealistic Returns",mix:"අවිශ්‍යයෙන් වැඩි returns කියනවා"},desc:{si:"\"100% guaranteed\", \"double your money\" - මේවා scam indicators",en:"\"100% guaranteed\", \"double money\" - These are scam indicators",mix:"\"100% guaranteed\", \"double money\" - මේවා scam indicators"}},
     {icon:"\uD83D\uDCE7",text:{si:"අනාරක්ෂිත email addresses",en:"Suspicious Email Addresses",mix:"අනාරක්ෂිත email addresses"},desc:{si:"support@bank-verify123.com වගේ fake email addresses",en:"Fake email addresses like support@bank-verify123.com",mix:"support@bank-verify123.com වගේ fake email addresses"}},
@@ -213,7 +173,8 @@ function renderRedFlags() {
     redFlagsData.forEach(function(flag) {
         var t = flag.text[currentLang] || flag.text['mix'];
         var d = flag.desc[currentLang] || flag.desc['mix'];
-        html += '<div class="red-flag"><span class="red-flag-icon">' + flag.icon + '</span>' +
+        html += '<div class="red-flag">' +
+            '<span class="red-flag-icon">' + flag.icon + '</span>' +
             '<div><div class="red-flag-text">' + t + '</div>' +
             '<div class="red-flag-desc">' + d + '</div></div></div>';
     });
@@ -222,21 +183,36 @@ function renderRedFlags() {
 
 // ========== COMPARE ==========
 var compareData = [
-    { fakeUrl: "www.faceb00k-login.com", realUrl: "www.facebook.com",
-      fakeText: {si:"අකුරු වෙනස් කර ඇත - 'oo' වෙනුවට '00'", en:"Misspelled domain - 'oo' replaced with '00'", mix:"අකුරු වෙනස් කර ඇත - 'oo' වෙනුවට '00'"},
-      realText: {si:"Correct spelling, HTTPS lock icon ඇත", en:"Correct spelling, has HTTPS lock icon", mix:"Correct spelling, HTTPS lock icon ඇත"}},
-    { fakeUrl: "+94 77 123 4567 (personal number)", realUrl: "Official bank hotline only",
-      fakeText: {si:"Personal number එකකින් call එනවා", en:"Calling from a personal number", mix:"Personal number එකකින් call එනවා"},
-      realText: {si:"Official hotline numbers පමණයි භාවිතා කරන්නේ", en:"Only official hotline numbers are used", mix:"Official hotline numbers පමණයි භාවිතා කරන්නේ"}},
-    { fakeUrl: "\"Your account BLOCKED! Click NOW!\"", realUrl: "\"Please verify your recent activity\"",
-      fakeText: {si:"ALL CAPS, exclamation marks, urgency create කරනවා", en:"ALL CAPS, exclamation marks, creates urgency", mix:"ALL CAPS, exclamation marks, urgency create කරනවා"},
-      realText: {si:"Polite tone, no pressure, reasonable language", en:"Polite tone, no pressure, reasonable language", mix:"Polite tone, no pressure, reasonable language"}},
-    { fakeUrl: "bit.ly/3xK9mZ2", realUrl: "https://www.dialog.lk/myaccount",
-      fakeText: {si:"URL shortener භාවිතා කරලා සැබෑ URL සඟවලා", en:"URL shortener used to hide real destination", mix:"URL shortener භාවිතා කරලා සැබෑ URL සඟවලා"},
-      realText: {si:"Full URL එක පෙන්නනවා, HTTPS secure ඇත", en:"Full URL visible, HTTPS secure", mix:"Full URL එක පෙන්නනවා, HTTPS secure ඇත"}},
-    { fakeUrl: "support@boc-verify-update.com", realUrl: "noreply@boc.lk",
-      fakeText: {si:"Fake domain name - 'boc.lk' නෙමේය", en:"Fake domain - not 'boc.lk'", mix:"Fake domain name - 'boc.lk' නෙමේය"},
-      realText: {si:"Official domain 'boc.lk' භාවිතා කරයි", en:"Uses official domain 'boc.lk'", mix:"Official domain 'boc.lk' භාවිතා කරයි"}}
+    {
+        fakeUrl: "www.faceb00k-login.com",
+        realUrl: "www.facebook.com",
+        fakeText: {si:"අකුරු වෙනස් කර ඇත - 'oo' වෙනුවට '00'", en:"Misspelled domain - 'oo' replaced with '00'", mix:"අකුරු වෙනස් කර ඇත - 'oo' වෙනුවට '00'"},
+        realText: {si:"Correct spelling, HTTPS lock icon ඇත", en:"Correct spelling, has HTTPS lock icon", mix:"Correct spelling, HTTPS lock icon ඇත"}
+    },
+    {
+        fakeUrl: "+94 77 123 4567 (personal number)",
+        realUrl: "Official bank hotline only",
+        fakeText: {si:"Personal number එකකින් call එනවා", en:"Calling from a personal number", mix:"Personal number එකකින් call එනවා"},
+        realText: {si:"Official hotline numbers පමණයි භාවිතා කරන්නේ", en:"Only official hotline numbers are used", mix:"Official hotline numbers පමණයි භාවිතා කරන්නේ"}
+    },
+    {
+        fakeUrl: "\"Your account BLOCKED! Click NOW!\"",
+        realUrl: "\"Please verify your recent activity\"",
+        fakeText: {si:"ALL CAPS, exclamation marks, urgency create කරනවා", en:"ALL CAPS, exclamation marks, creates urgency", mix:"ALL CAPS, exclamation marks, urgency create කරනවා"},
+        realText: {si:"Polite tone, no pressure, reasonable language", en:"Polite tone, no pressure, reasonable language", mix:"Polite tone, no pressure, reasonable language"}
+    },
+    {
+        fakeUrl: "bit.ly/3xK9mZ2",
+        realUrl: "https://www.dialog.lk/myaccount",
+        fakeText: {si:"URL shortener භාවිතා කරලා සැබෑ URL සඟවලා", en:"URL shortener used to hide real destination", mix:"URL shortener භාවිතා කරලා සැබෑ URL සඟවලා"},
+        realText: {si:"Full URL එක පෙන්නනවා, HTTPS secure ඇත", en:"Full URL visible, HTTPS secure", mix:"Full URL එක පෙන්නනවා, HTTPS secure ඇත"}
+    },
+    {
+        fakeUrl: "support@boc-verify-update.com",
+        realUrl: "noreply@boc.lk",
+        fakeText: {si:"Fake domain name - 'boc.lk' නෙමේය", en:"Fake domain - not 'boc.lk'", mix:"Fake domain name - 'boc.lk' නෙමේය"},
+        realText: {si:"Official domain 'boc.lk' භාවිතා කරයි", en:"Uses official domain 'boc.lk'", mix:"Official domain 'boc.lk' භාවිතා කරයි"}
+    }
 ];
 
 function renderCompare() {
@@ -247,12 +223,16 @@ function renderCompare() {
         var ft = item.fakeText[currentLang] || item.fakeText['mix'];
         var rt = item.realText[currentLang] || item.realText['mix'];
         html += '<div class="compare-row">' +
-            '<div class="compare-item fake"><span class="compare-tag fake-tag">FAKE</span>' +
+            '<div class="compare-item fake">' +
+            '<span class="compare-tag fake-tag">FAKE</span>' +
             '<div class="compare-text">' + ft + '</div>' +
-            '<div class="compare-url fake-url">' + item.fakeUrl + '</div></div>' +
-            '<div class="compare-item real"><span class="compare-tag real-tag">REAL</span>' +
+            '<div class="compare-url fake-url">' + item.fakeUrl + '</div>' +
+            '</div>' +
+            '<div class="compare-item real">' +
+            '<span class="compare-tag real-tag">REAL</span>' +
             '<div class="compare-text">' + rt + '</div>' +
-            '<div class="compare-url real-url">' + item.realUrl + '</div></div></div>';
+            '<div class="compare-url real-url">' + item.realUrl + '</div>' +
+            '</div></div>';
     });
     container.innerHTML = html;
 }
@@ -287,8 +267,11 @@ function renderChecklist() {
 }
 
 function toggleCheck(index) {
-    if (checkedItems.has(index)) { checkedItems.delete(index); }
-    else { checkedItems.add(index); }
+    if (checkedItems.has(index)) {
+        checkedItems.delete(index);
+    } else {
+        checkedItems.add(index);
+    }
     renderChecklist();
 }
 
@@ -304,36 +287,61 @@ function updateProgress() {
 
 // ========== QUIZ ==========
 var quizData = [
-    { q:{si:"බැංකුවක් WhatsApp හරහා OTP ඉල්ලුවොත් කරන්න කියන්නේ?",en:"What should you do if a bank asks for OTP via WhatsApp?",mix:"බැංකුවක් WhatsApp හරහා OTP ඉල්ලුවොත් කරන්න කියන්නේ?"},
-      opts:[{si:"OTP දෙන්න",en:"Give the OTP",mix:"OTP දෙන්න"},{si:"බැංකුවට කතා කරන්න",en:"Call the bank directly",mix:"බැංකුවට කතා කරන්න"},{si:"Message එක reply කරන්න",en:"Reply to the message",mix:"Message එක reply කරන්න"},{si:"Link එක click කරන්න",en:"Click the link",mix:"Link එක click කරන්න"}],
-      correct:1, explain:{si:"බැංකු කිසිදා WhatsApp හරහා OTP ඉල්ලන්නේ නැත. වහාම නිල නම්බර් එකෙන් කතා කරන්න.",en:"Banks never ask for OTP via WhatsApp. Always call the official number.",mix:"බැංකු කිසිදා WhatsApp හරහා OTP ඉල්ලන්නේ නැත. වහාම නිල නම්බර් එකෙන් කතා කරන්න."}},
-    { q:{si:"'50GB Free Data' message එකක් දුටුණොත්?",en:"What if you see a '50GB Free Data' message?",mix:"'50GB Free Data' message එකක් දුටුණොත්?"},
-      opts:[{si:"Click කරන්න",en:"Click it",mix:"Click කරන්න"},{si:"යහළුවන්ට forward කරන්න",en:"Forward to friends",mix:"යහළුවන්ට forward කරන්න"},{si:"Delete කරන්න - scam එකක්",en:"Delete it - it is a scam",mix:"Delete කරන්න - scam එකක්"},{si:"Link එක save කරන්න",en:"Save the link",mix:"Link එක save කරන්න"}],
-      correct:2, explain:{si:"Telecom companies කිසිවිටෙකත් WhatsApp හරහා free data offers දෙන්නේ නැත.",en:"Telecom companies never give free data offers via WhatsApp.",mix:"Telecom companies කිසිවිටෙකත් WhatsApp හරහා free data offers දෙන්නේ නැත."}},
-    { q:{si:"Unknown QR code එකක් scan කිරීමෙන් සිදුවිය හැකි දේ මොකක්ද?",en:"What can happen if you scan an unknown QR code?",mix:"Unknown QR code scan කිරීමෙන් සිදුවිය හැකි දේ මොකක්ද?"},
-      opts:[{si:"මුදල් අයවිය හැකියි",en:"Money could be deducted",mix:"මුදල් අයවිය හැකියි"},{si:"ඔබේ phone එකට virus ඇතුලත් වෙයි",en:"Your phone could get a virus",mix:"Phone එකට virus ඇතුලත් වෙයි"},{si:"දෙකම සිදුවිය හැකියි",en:"Both are possible",mix:"දෙකම සිදුවිය හැකියි"},{si:"කිසිම දෙයක් සිදුවිය නොහැක",en:"Nothing happens",mix:"කිසිම දෙයක් සිදුවිය නොහැක"}],
-      correct:2, explain:{si:"Unknown QR codes මගින් මුදල් අයවීමට සහ malware install කිරීමට පුළුවන්.",en:"Unknown QR codes can be used to deduct money and install malware.",mix:"Unknown QR codes මගින් මුදල් අයවීමට සහ malware install කිරීමට පුළුවන්."}},
-    { q:{si:"2FA (Two Factor Authentication) යනු මොකක්ද?",en:"What is 2FA (Two Factor Authentication)?",mix:"2FA (Two Factor Authentication) යනු මොකක්ද?"},
-      opts:[{si:"මුදල් දෙන්න තවත් ක්‍රමයක්",en:"Another way to give money",mix:"මුදල් දෙන්න තවත් ක්‍රමයක්"},{si:"Extra security layer එකක්",en:"An extra security layer",mix:"Extra security layer එකක්"},{si:"Facebook එකේ feature එකක්",en:"A Facebook feature",mix:"Facebook එකේ feature එකක්"},{si:"VPN service එකක්",en:"A VPN service",mix:"VPN service එකක්"}],
-      correct:1, explain:{si:"2FA යනු password එකට අමතරව phone එකට verify කරන extra security layer එකක්.",en:"2FA is an extra security layer that verifies via phone in addition to password.",mix:"2FA යනු password එකට අමතරව phone verify කරන extra security layer එකක්."}},
-    { q:{si:"'faceb00k.com' URL එකේ ගැටලුව මොකක්ද?",en:"What is wrong with 'faceb00k.com' URL?",mix:"'faceb00k.com' URL එකේ ගැටලුව මොකක්ද?"},
-      opts:[{si:"අකුරු වෙනස් කර ඇත - 'oo' වෙනුවට '00'",en:"Misspelled - 'oo' replaced with '00'",mix:"අකුරු වෙනස් කර ඇත - 'oo' වෙනුවට '00'"},{si:"Nothing wrong",en:"Nothing wrong",mix:"කිසිම ගැටලුවක් නැත"},{si:"Too long",en:"Too long",mix:"ලොකු දිගහයි"},{si:"HTTPS නැත",en:"No HTTPS",mix:"HTTPS නැත"}],
-      correct:0, explain:{si:"Fake websites real domains වගේ පෙනෙනවා - අකුරු වෙනස් කරලා. හරියට URL බලන්න.",en:"Fake websites look like real domains - with misspelled letters. Always check the URL.",mix:"Fake websites real domains වගේ පෙනෙනවා - අකුරු වෙනස් කරලා. හරියට URL බලන්න."}},
-    { q:{si:"පොලිසියට phone හරහා මුදල් ඉල්ලන කියන්නේ නම්?",en:"What if police asks for money via phone?",mix:"පොලිසියට phone හරහා මුදල් ඉල්ලන කියන්නේ නම්?"},
-      opts:[{si:"මුදල් දෙන්න",en:"Give the money",mix:"මුදල් දෙන්න"},{si:"පොලිසියට ගියන්න",en:"Go to the police station",mix:"පොලිසියට ගියන්න"},{si:"එය scam බව දන්නවා",en:"Recognize it is a scam",mix:"එය scam බව දන්නවා"},{si:"OTP ඉල්ලා දෙන්න",en:"Give OTP",mix:"OTP ඉල්ලා දෙන්න"}],
-      correct:2, explain:{si:"පොලිසිය කිසිදා phone හරහා මුදල් ඉල්ලන්නේ නැත. එය 100% scam එකක්.",en:"Police never ask for money via phone. It is 100% a scam.",mix:"පොලිසිය කිසිදා phone හරහා මුදල් ඉල්ලන්නේ නැත. එය 100% scam එකක්."}},
-    { q:{si:"'Double your money in 24 hours' කියන්නේ?",en:"'Double your money in 24 hours'?",mix:"'Double your money in 24 hours' කියන්නේ?"},
-      opts:[{si:"Real investment opportunity",en:"Real investment opportunity",mix:"Real investment opportunity"},{si:"Guaranteed scam",en:"Guaranteed scam",mix:"Guaranteed scam"},{si:"Sometimes real",en:"Sometimes real",mix:"Sometimes real"},{si:"Try it with small amount",en:"Try it with small amount",mix:"Small amount එකෙන් try කරන්න"}],
-      correct:1, explain:{si:"කිසිමවිටෙකත් 24 hours ඇතුළේ money double කරන්නේ නැත. එය 100% scam එකක්.",en:"Nobody can double your money in 24 hours. It is 100% a scam.",mix:"කිසිමවිටෙකත් 24 hours ඇතුළේ money double කරන්නේ නැත. එය 100% scam."}},
-    { q:{si:"SMS එකක් ඇවිත් අනාරක්ෂිත link එකක් තියේ නම්?",en:"SMS has an unknown link - what to do?",mix:"SMS එකක් ඇවිත් අනාරක්ෂිත link එකක් තියේ නම්?"},
-      opts:[{si:"Click කරලා බලන්න",en:"Click and check",mix:"Click කරලා බලන්න"},{si:"Delete කරන්න",en:"Delete it",mix:"Delete කරන්න"},{si:"Forward කරන්න",en:"Forward it",mix:"Forward කරන්න"},{si:"Screenshot ගන්න",en:"Take screenshot",mix:"Screenshot ගන්න"}],
-      correct:1, explain:{si:"අනාරක්ෂිත links කිසිදා click නොකරන්න. වහාම delete කරන්න.",en:"Never click unknown links. Always delete them immediately.",mix:"අනාරක්ෂිත links කිසිදා click නොකරන්න. වහාම delete කරන්න."}},
-    { q:{si:"AI voice cloning scam එකකින් මොකක් කරනවා?",en:"What happens in AI voice cloning scam?",mix:"AI voice cloning scam එකකින් �ොකක් කරනවා?"},
-      opts:[{si:"ඥාතීන්ගේ ස්වරයෙන් call කරනවා",en:"Calls using relative's voice",mix:"ඥාතීන්ගේ ස්වරයෙන් call කරනවා"},{si:"Emails යවනවා",en:"Sends emails",mix:"Emails යවනවා"},{si:"Photos steal කරනවා",en:"Steals photos",mix:"Photos steal කරනවා"},{si:"Nothing happens",en:"Nothing happens",mix:"කිසිම දෙයක් සිදුවිය නොහැක"}],
-      correct:0, explain:{si:"AI මගින් ඥාතීන්ගේ ස්වරය copy කරලා 'අනතුරු' එකක් විස්තරු කර මුදල් ඉල්ලනවා.",en:"AI copies your relative's voice to create a fake emergency and ask for money.",mix:"AI මගින් ඥාතීන්ගේ ස්වරය copy කරලා 'අනතුරු' විස්තරු කර මුදල් ඉල්ලනවා."}},
-    { q:{si:"Screen sharing කරන්න කියනවා නම්?",en:"What if someone asks you to share your screen?",mix:"Screen sharing කරන්න කියනවා නම්?"},
-      opts:[{si:"Share කරන්න",en:"Share it",mix:"Share කරන්න"},{si:"සැක සහිතව - කිසිදා share නොකරන්න",en:"Be suspicious - never share",mix:"සැක සහිතව - කිසිදා share නොකරන්න"},{si:"Partially share කරන්න",en:"Share partially",mix:"Partially share කරන්න"},{si:"Screenshot එකක් share කරන්න",en:"Share a screenshot",mix:"Screenshot එකක් share කරන්න"}],
-      correct:1, explain:{si:"Screen share කිරීමෙන් OTP, passwords සහ සියලුම data steal කරනවා. කිසිදා share නොකරන්න.",en:"Screen sharing lets them steal OTP, passwords and all data. Never share.",mix:"Screen share කිරීමෙන් OTP, passwords සහ සියලුම data steal කරනවා. කිසිදා share නොකරන්න."}}
+    {
+        q:{si:"බැංකුවක් WhatsApp හරහා OTP ඉල්ලුවොත් කරන්න කියන්නේ?",en:"What should you do if a bank asks for OTP via WhatsApp?",mix:"බැංකුවක් WhatsApp හරහා OTP ඉල්ලුවොත් කරන්න කියන්නේ?"},
+        opts:[
+            {si:"OTP දෙන්න",en:"Give the OTP",mix:"OTP දෙන්න"},
+            {si:"බැංකුවට කතා කරන්න",en:"Call the bank directly",mix:"බැංකුවට කතා කරන්න"},
+            {si:"Message එක reply කරන්න",en:"Reply to the message",mix:"Message එක reply කරන්න"},
+            {si:"Link එක click කරන්න",en:"Click the link",mix:"Link එක click කරන්න"}
+        ],
+        correct:1,
+        explain:{si:"බැංකු කිසිදා WhatsApp හරහා OTP ඉල්ලන්නේ නැත. වහාම නිල නම්බර් එකෙන් කතා කරන්න.",en:"Banks never ask for OTP via WhatsApp. Always call the official number.",mix:"බැංකු කිසිදා WhatsApp හරහා OTP ඉල්ලන්නේ නැත. වහාම නිල නම්බර් එකෙන් කතා කරන්න."}
+    },
+    {
+        q:{si:"'50GB Free Data' message එකක් දුටුණොත්?",en:"What if you see a '50GB Free Data' message?",mix:"'50GB Free Data' message එකක් දුටුණොත්?"},
+        opts:[
+            {si:"Click කරන්න",en:"Click it",mix:"Click කරන්න"},
+            {si:"යහළුවන්ට forward කරන්න",en:"Forward to friends",mix:"යහළුවන්ට forward කරන්න"},
+            {si:"Delete කරන්න - scam එකක්",en:"Delete it - it is a scam",mix:"Delete කරන්න - scam එකක්"},
+            {si:"Link එක save කරන්න",en:"Save the link",mix:"Link එක save කරන්න"}
+        ],
+        correct:2,
+        explain:{si:"Telecom companies කිසිවිටෙකත් WhatsApp හරහා free data offers දෙන්නේ නැත.",en:"Telecom companies never give free data offers via WhatsApp.",mix:"Telecom companies කිසිවිටෙකත් WhatsApp හරහා free data offers දෙන්නේ නැත."}
+    },
+    {
+        q:{si:"Unknown QR code එකක් scan කිරීමෙන් සිදුවිය හැකි දේ මොකක්ද?",en:"What can happen if you scan an unknown QR code?",mix:"Unknown QR code scan කිරීමෙන් සිදුවිය හැකි දේ මොකක්ද?"},
+        opts:[
+            {si:"මුදල් අයවිය හැකියි",en:"Money could be deducted",mix:"මුදල් අයවිය හැකියි"},
+            {si:"ඔබේ phone එකට virus ඇතුලත් වෙයි",en:"Your phone could get a virus",mix:"Phone එකට virus ඇතුලත් වෙයි"},
+            {si:"දෙකම සිදුවිය හැකියි",en:"Both are possible",mix:"දෙකම සිදුවිය හැකියි"},
+            {si:"කිසිම දෙයක් සිදුවිය නොහැක",en:"Nothing happens",mix:"කිසිම දෙයක් සිදුවිය නොහැක"}
+        ],
+        correct:2,
+        explain:{si:"Unknown QR codes මගින් මුදල් අයවීමට සහ malware install කිරීමට පුළුවන්.",en:"Unknown QR codes can be used to deduct money and install malware.",mix:"Unknown QR codes මගින් මුදල් අයවීමට සහ malware install කිරීමට පුළුවන්."}
+    },
+    {
+        q:{si:"2FA (Two Factor Authentication) යනු මොකක්ද?",en:"What is 2FA (Two Factor Authentication)?",mix:"2FA (Two Factor Authentication) යනු මොකක්ද?"},
+        opts:[
+            {si:"මුදල් දෙන්න තවත් ක්‍රමයක්",en:"Another way to give money",mix:"මුදල් දෙන්න තවත් ක්‍රමයක්"},
+            {si:"Extra security layer එකක්",en:"An extra security layer",mix:"Extra security layer එකක්"},
+            {si:"Facebook එකේ feature එකක්",en:"A Facebook feature",mix:"Facebook එකේ feature එකක්"},
+            {si:"VPN service එකක්",en:"A VPN service",mix:"VPN service එකක්"}
+        ],
+        correct:1,
+        explain:{si:"2FA යනු password එකට අමතරව phone එකට verify කරන extra security layer එකක්.",en:"2FA is an extra security layer that verifies via phone in addition to password.",mix:"2FA යනු password එකට අමතරව phone verify කරන extra security layer එකක්."}
+    },
+    {
+        q:{si:"'faceb00k.com' URL එකේ ගැටලුව මොකක්ද?",en:"What is wrong with 'faceb00k.com' URL?",mix:"'faceb00k.com' URL එකේ ගැටලුව මොකක්ද?"},
+        opts:[
+            {si:"අකුරු වෙනස් කර ඇත - 'oo' වෙනුවට '00'",en:"Misspelled - 'oo' replaced with '00'",mix:"අකුරු වෙනස් කර ඇත - 'oo' වෙනුවට '00'"},
+            {si:"Nothing wrong",en:"Nothing wrong",mix:"කිසිම ගැටලුවක් නැත"},
+            {si:"Too long",en:"Too long",mix:"ලොකු දිගහයි"},
+            {si:"HTTPS නැත",en:"No HTTPS",mix:"HTTPS නැත"}
+        ],
+        correct:0,
+        explain:{si:"Fake websites real domains වගේ පෙනෙනවා - අකුරු වෙනස් කරලා. හරියට URL බලන්න.",en:"Fake websites look like real domains - with misspelled letters. Always check the URL.",mix:"Fake websites real domains වගේ පෙනෙනවා - අකුරු වෙනස් කරලා. හරියට URL බලන්න."}
+    }
 ];
 
 function renderQuiz() {
@@ -341,15 +349,15 @@ function renderQuiz() {
     var resultDiv = document.getElementById('quiz-result');
     if (!container) return;
     quizAnswers = {};
-    quizCorrectCount = 0;
     if (resultDiv) resultDiv.style.display = 'none';
 
     var html = '';
     quizData.forEach(function(quiz, qi) {
         var qText = quiz.q[currentLang] || quiz.q['mix'];
         html += '<div class="quiz-question" id="quiz-q-' + qi + '">' +
-            '<div class="quiz-q-num">' + (currentLang === 'en' ? 'Question ' : '\u0DB4\u0DCA\u0DCA\u0DC1\u0DCA\u0DAB\u0DBA ') + (qi + 1) + '/' + quizData.length + '</div>' +
+            '<div class="quiz-q-num">' + (currentLang === 'en' ? 'Question ' : 'ප්‍රශ්නය ') + (qi + 1) + '/' + quizData.length + '</div>' +
             '<div class="quiz-q-text">' + qText + '</div>';
+
         var letters = ['A','B','C','D'];
         quiz.opts.forEach(function(opt, oi) {
             var oText = opt[currentLang] || opt['mix'];
@@ -357,18 +365,21 @@ function renderQuiz() {
                 '<span class="quiz-option-letter">' + letters[oi] + '</span>' +
                 '<span>' + oText + '</span></div>';
         });
+
         html += '<div class="quiz-explanation" id="quiz-exp-' + qi + '"></div></div>';
     });
 
     html += '<div style="text-align:center;margin-top:1rem;"><button class="share-btn" style="background:linear-gradient(135deg,var(--accent),var(--success))" onclick="submitQuiz()">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>' +
-        '<span>' + (currentLang === 'en' ? 'Submit Answers' : '\u0DB4\u0DD2\u0DBD\u0DD2\u0DAD\u0DD4\u0DBB\u0DD4 \u0DB6\u0DBD\u0DB1\u0DCA\u0DB1\u0DCA\u0DB1\u0DCA') + '</span></button></div>';
+        '<span>' + (currentLang === 'en' ? 'Submit Answers' : 'පිළිතුරු බලන්න') + '</span></button></div>';
+
     container.innerHTML = html;
 }
 
 function selectAnswer(qi, oi) {
     if (quizAnswers[qi] !== undefined) return;
     quizAnswers[qi] = oi;
+
     quizData[qi].opts.forEach(function(opt, i) {
         var el = document.getElementById('quiz-opt-' + qi + '-' + i);
         if (!el) return;
@@ -379,12 +390,12 @@ function selectAnswer(qi, oi) {
 
 function submitQuiz() {
     var total = quizData.length;
-    quizCorrectCount = 0;
+    var correct = 0;
 
     quizData.forEach(function(quiz, qi) {
         var userAns = quizAnswers[qi];
         var isCorrect = userAns === quiz.correct;
-        if (isCorrect) quizCorrectCount++;
+        if (isCorrect) correct++;
 
         quiz.opts.forEach(function(opt, oi) {
             var el = document.getElementById('quiz-opt-' + qi + '-' + oi);
@@ -393,7 +404,6 @@ function submitQuiz() {
             el.onclick = null;
             if (oi === quiz.correct) el.classList.add('correct');
             if (oi === userAns && !isCorrect) el.classList.add('wrong');
-            if (oi !== userAns && oi !== quiz.correct) el.classList.add('disabled');
         });
 
         var expEl = document.getElementById('quiz-exp-' + qi);
@@ -404,36 +414,29 @@ function submitQuiz() {
             var eText = quiz.explain[currentLang] || quiz.explain['mix'];
             expEl.textContent = (isCorrect ? '\u2713 ' : '\u2717 ') + eText;
         }
-
-        var scoreText = quizCorrectCount + '/' + (qi + 1);
-        if (isCorrect) {
-            showToast('correct', currentLang === 'en' ? 'Correct!' : '\u0DC4\u0DD4\u0DBB\u0DD2\u0DA2\u0DD2!', scoreText);
-        } else if (userAns !== undefined) {
-            showToast('wrong', currentLang === 'en' ? 'Wrong!' : '\u0DB7\u0DC5\u0DAF!', scoreText);
-        }
     });
 
-    var pct = Math.round((quizCorrectCount / total) * 100);
+    var pct = Math.round((correct / total) * 100);
     var resultDiv = document.getElementById('quiz-result');
     if (!resultDiv) return;
     resultDiv.style.display = 'block';
 
     var cls = pct >= 80 ? 'great' : (pct >= 50 ? 'okay' : 'poor');
-    var msg = pct >= 80 ? (currentLang === 'en' ? 'Excellent!' : '\u0D89\u0DAD\u0DCF \u0DC4\u0DDC\u0DAF\u0DAF\u0DD2\u0DBA\u0DD2!') :
-              pct >= 50 ? (currentLang === 'en' ? 'Good, but learn more!' : '\u0DC4\u0DDC\u0DAF\u0DAF\u0DD2, \u0DAD\u0DC0 \u0D89\u0D9C\u0DD9\u0DB1\u0D9C\u0DB1\u0DCA\u0D9C\u0DB1\u0DCA!') :
-              (currentLang === 'en' ? 'You need to learn more!' : '\u0D94\u0DB6 \u0DAD\u0DC0 \u0D89\u0D9C\u0DD9\u0DB1\u0D9C\u0DB1\u0DCA \u0DC0\u0DBB\u0DBB\u0DAF\u0DD4\u0DA9 \u0DC0\u0DD9\u0DA2\u0DAF\u0DD2!');
+    var msg = pct >= 80 ? (currentLang === 'en' ? 'Excellent!' : 'ඉතා හොඳයි!') :
+              pct >= 50 ? (currentLang === 'en' ? 'Good, but learn more!' : 'හොඳයි, තව ඉගෙනගන්න!') :
+              (currentLang === 'en' ? 'You need to learn more!' : 'ඔබ තව ඉගෙනගත්ත් වෙනවා!');
 
-    resultDiv.innerHTML = '<div class="quiz-score ' + cls + '">' + quizCorrectCount + '/' + total + '</div>' +
+    resultDiv.innerHTML = '<div class="quiz-score ' + cls + '">' + correct + '/' + total + '</div>' +
         '<p style="margin-top:0.5rem;font-size:1.1rem;font-weight:700;">' + msg + '</p>' +
-        '<p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-muted);">' + pct + '% ' + (currentLang === 'en' ? 'score' : '\u0DBD\u0D9A\u0DD4\u0DAB\u0DD4\u0DC0\u0DC0') + '</p>';
+        '<p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-muted);">' + pct + '% ' + (currentLang === 'en' ? 'score' : 'ලකුණුව') + '</p>';
     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // ========== SHARE ==========
 function shareOnWhatsApp() {
-    var text = currentLang === 'en' ?
-        '\u26A0\uFE0F Phishing Awareness Guide!\n\nYou clicked a fake link! Learn how to spot scams.\n\n70+ Scam types, Red Flags, Quiz & more!\n\nShare to protect your friends!' :
-        '\u26A0\uFE0F Phishing Alert Guide!\n\n\u0D94\u0DB6 \u0DB6\u0DDC\u0DBB\u0DD4 link click \u0D9A\u0DC5\u0DCF! 70+ Scam \u0DC0\u0DBB\u0DBB\u0DAF\u0DD4\u0DA9, Red Flags, Quiz & \u0D86\u0DBB\u0DBB\u0DA2\u0DCA\u0DBB\u0DC4 \u0D91\u0D9A\u0D9A\u0DA7 \u0DB4\u0D90\u0DA7\u0DD2\u0DBA\u0DB1\u0DCA\u0DB1!\n\nShare \u0D9A\u0DBB \u0DBA\u0DC4\u0DC5\u0DD4\u0DC0\u0DC0\u0DC0\u0DB1\u0DCA\u0DB1\u0DC0 \u0DBD\u0DAF\u0DAF\u0DD4\u0DA9 \u0D9A\u0DBB!';
+    var text = currentLang === 'si' ?
+        '\u26A0\uFE0F \u0DB8\u0DD9\u0DBA Phishing Awareness Guide \u0D91\u0D9A\u0D9A\u0DCA! \n\n\u0D94\u0DB6 \u0DB6\u0DDC\u0DBB\u0DD4 link \u0D91\u0D9A\u0D9A\u0DCA \u0D9A\u0DD2\u0DBB\u0DD3\u0DC0\u0DCF \u0DA2\u0DCF\u0DC0\u0DCF\u0DC4\u0DBD\u0DCF \u0D86\u0DBB\u0DD4 \u0DB4\u0DD2\u0DAF\u0DCA \u0DC3\u0DDC\u0DBB\u0DD4\u0DB1\u0DCA \u0DB1\u0DD2\u0DAF\u0DD4\u0DC0\u0DAD\u0DCA \u0D9A\u0DBB\u0DB1\u0DCA\u0DB1! \n\n50+ Scam \u0DC0\u0DBB\u0D9C, Red Flags, Quiz \u0DC3\u0DC4 \u0D86\u0DBB\u0D9A\u0DCA\u0DC2\u0DCF\u0DC4 \u0D9A\u0DD2\u0DBB\u0DD3\u0DB8\u0DCA \u0D87\u0DAD\u0DD4\u0DBD \u0D91\u0D9A\u0D9A\u0DA7 \u0DB4\u0DD0\u0DA7\u0DD2\u0DBA\u0DB1\u0DCA\u0DB1!' :
+        '\u26A0\uFE0F Phishing Awareness Guide!\n\nYou clicked a fake link! Learn how to spot scams.\n\n50+ Scam types, Red Flags, Quiz & more!\n\nShare to protect your friends!';
     window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
 }
 
@@ -444,6 +447,7 @@ document.addEventListener('DOMContentLoaded', function() {
     renderCompare();
     renderChecklist();
     renderQuiz();
+
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.body.setAttribute('data-theme', 'dark');
     }
