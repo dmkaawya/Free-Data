@@ -12,6 +12,9 @@
     <div class="bg-glow glow-1"></div>
     <div class="bg-glow glow-2"></div>
 
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
     <header class="header">
         <div class="header-content">
             <div class="logo">
@@ -28,6 +31,9 @@
                     <button class="lang-btn active" onclick="setLanguage('mix')" id="btn-mix">Mix</button>
                     <button class="lang-btn" onclick="setLanguage('en')" id="btn-en">EN</button>
                 </div>
+                <button class="header-share-btn" onclick="shareOnWhatsApp()" aria-label="Share">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                </button>
                 <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
                     <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
@@ -52,7 +58,7 @@
 
             <div class="stats-bar">
                 <div class="stat-item">
-                    <div class="stat-number danger" id="stat-scams">50+</div>
+                    <div class="stat-number danger" id="stat-scams">70+</div>
                     <div class="stat-label" data-si="Scam වර්ග" data-en="Scam Types" data-mix="Scam වර්ග">Scam වර්ග</div>
                 </div>
                 <div class="stat-item">
@@ -96,7 +102,7 @@
                     <div class="card-header-left">
                         <div class="card-icon danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
                         <div>
-                            <div class="card-title" data-si="50+ Scam වර්ග" data-en="50+ Scam Types" data-mix="50+ Scam වර්ග">50+ Scam වර්ග</div>
+                            <div class="card-title" data-si="70+ Scam වර්ග" data-en="70+ Scam Types" data-mix="70+ Scam වර්ග">70+ Scam වර්ග</div>
                             <div class="card-subtitle" data-si="සියලුම Scam හඳුනා ගන්න" data-en="Identify all scam types" data-mix="සියලුම Scam හඳුනා ගන්න">සියලුම Scam හඳුනා ගන්න</div>
                         </div>
                     </div>
@@ -200,7 +206,7 @@
             <button class="back-btn" onclick="showPage('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg><span data-si="ආපසු" data-en="Back" data-mix="ආපසු">ආපසු</span></button>
             <div class="detail-header">
                 <div class="detail-badge danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg><span data-si="හඳුනා ගන්න" data-en="Identify Them" data-mix="Identify Them">Identify Them</span></div>
-                <h1 class="detail-title" data-si="50+ Scam වර්ග" data-en="50+ Scam Types" data-mix="50+ Scam වර්ග">50+ Scam වර්ග</h1>
+                <h1 class="detail-title" data-si="70+ Scam වර්ග" data-en="70+ Scam Types" data-mix="70+ Scam වර්ග">70+ Scam වර්ග</h1>
                 <p class="detail-desc" data-si="සුලභ scam වර්ග හඳුනා ගන්න:" data-en="Identify common scam types:" data-mix="සුලභ scam වර්ග හඳුනා ගන්න:">සුලභ scam වර්ග හඳුනා ගන්න:</p>
             </div>
             <div class="search-box">
@@ -246,7 +252,7 @@
                 <p class="detail-desc" data-si="ඔබව ආරක්ෂා කර ගැනීමට මෙම පියවර ගන්න:" data-en="Take these steps to protect yourself:" data-mix="ඔබව ආරක්ෂා කර ගැනීමට මෙම පියවර ගන්න:">ඔබව ආරක්ෂා කර ගැනීමට මෙම පියවර ගන්න:</p>
             </div>
             <div class="list-item"><div class="list-item-icon success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div><div class="list-item-content"><h4 data-si="සියලුම Passwords මාරු කරන්න" data-en="Change ALL Passwords" data-mix="සියලුම Passwords මාරු කරන්න">සියලුම Passwords මාරු කරන්න</h4><p data-si="Gmail, Facebook, Bank apps සියල්ල" data-en="Gmail, Facebook, Bank apps - everything" data-mix="Gmail, Facebook, Bank apps සියල්ල">Gmail, Facebook, Bank apps සියල්ල</p></div></div>
-            <div class="list-item"><div class="list-item-icon success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="list-item-content"><h4 data-si="2FA සක්‍රීය කරන්න" data-en="Enable 2FA" data-mix="2FA සක්‍රීය කරන්න">2FA සක්‍රීය කරන්න</h4><p data-si="Extra security layer එකක් දාන්න" data-en="Add an extra security layer" data-mix="Extra security layer එකක් දාන්න">Extra security layer එකක් දාන්න</p></div></div>
+            <div class="list-item"><div class="list-item-icon success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="list-item-content"><h4 data-si="2FA සක්‍රීය කරන්න" data-en="Enable 2FA" data-mix="2FA සක්‍රීය කරන්න">2FA සක්‍රීය කරන්න</h4><p data-si="Extra security layer එකක් දාන්න" data-en="Add an extra security layer" data-mix:"Extra security layer එකක් දාන්න">Extra security layer එකක් දාන්න</p></div></div>
             <div class="list-item"><div class="list-item-icon success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg></div><div class="list-item-content"><h4 data-si="පොලිසියට Complaint කරන්න" data-en="File Police Complaint" data-mix="පොලිසියට Complaint කරන්න">පොලිසියට Complaint කරන්න</h4><p data-si="Cyber Crime Division" data-en="Cyber Crime Division" data-mix="Cyber Crime Division">Cyber Crime Division</p></div></div>
             <h3 style="margin-top:1.5rem;margin-bottom:0.75rem;font-size:1rem;font-weight:700;" data-si="ආපදා දුරකථන:" data-en="Emergency Numbers:" data-mix="ආපදා දුරකථන:">ආපදා දුරකථන:</h3>
             <div class="contacts-grid">
