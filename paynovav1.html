@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayNova — Unique Payment Flows</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','sans-serif']}}}}</script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',sans-serif}
+    .glass{background:rgba(255,255,255,0.03);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.08)}
+    html:not(.dark) .glass{background:rgba(255,255,255,0.7);border:1px solid rgba(0,0,0,0.08)}
+
+    /* ===== CARD 3D ===== */
+    .card-perspective{perspective:1200px;width:100%;max-width:380px;height:230px}
+    .card-body{position:relative;width:100%;height:100%;transition:transform .7s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d}
+    .card-body.flipped{transform:rotateY(180deg)}
+    .card-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:16px;padding:24px;overflow:hidden}
+    .card-front{background:linear-gradient(135deg,#0c0c1d 0%,#1a0a2e 40%,#0d1b3e 100%);border:1px solid rgba(255,255,255,0.12);box-shadow:0 30px 60px rgba(0,0,0,0.5),0 0 40px rgba(88,28,135,0.15)}
+    .card-front::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg,transparent,rgba(255,255,255,0.03),transparent 30%);animation:hologram 6s linear infinite}
+    @keyframes hologram{to{transform:rotate(360deg)}}
+    .card-back{background:linear-gradient(135deg,#0c0c1d,#1a0a2e,#0d1b3e);border:1px solid rgba(255,255,255,0.12);transform:rotateY(180deg);box-shadow:0 30px 60px rgba(0,0,0,0.5)}
+    .mag-strip{height:46px;background:repeating-linear-gradient(90deg,#111,#222 2px,#111 4px);margin:-24px -24px 0}
+    .sig-box{height:36px;background:#e8e4d9;border-radius:4px;margin:16px 20px 0;display:flex;align-items:center;justify-content:flex-end;padding:0 12px;font-style:italic;font-size:11px;color:#555}
+    .chip{width:48px;height:34px;border-radius:6px;background:linear-gradient(135deg,#c9a84c,#f0d060,#c9a84c);position:relative;overflow:hidden}
+    .chip::before{content:'';position:absolute;inset:4px;border:1px solid rgba(0,0,0,0.15);border-radius:3px}
+    .chip::after{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(0,0,0,0.08)}
+    .contactless{opacity:.5}
+
+    /* ===== PHONE MOCKUP ===== */
+    .phone-frame{width:220px;height:420px;border-radius:32px;border:3px solid #333;background:#0a0a0a;position:relative;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.1)}
+    .phone-notch{width:100px;height:24px;background:#0a0a0a;border-radius:0 0 16px 16px;position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:10}
+    .phone-screen{position:absolute;inset:8px;border-radius:26px;overflow:hidden}
+
+    /* ===== BLOCKCHAIN ===== */
+    .chain-node{width:60px;height:60px;border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative;transition:all .5s}
+    .chain-link{height:2px;flex:1;position:relative;overflow:hidden;min-width:30px}
+    .chain-link::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,#22d3ee,transparent);animation:chainFlow 1.5s linear infinite}
+    @keyframes chainFlow{to{left:100%}}
+
+    /* ===== FINGERPRINT ===== */
+    .fp-ring{position:absolute;border-radius:50%;border:2px solid rgba(249,115,22,0.3);animation:fpPulse 2s ease-out infinite}
+    @keyframes fpPulse{0%{transform:scale(1);opacity:.6}100%{transform:scale(2.5);opacity:0}}
+
+    /* ===== BNPL ===== */
+    .install-bar{height:48px;border-radius:10px;position:relative;overflow:hidden;transition:all .5s}
+    .install-bar::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);animation:shimmer 2s infinite;background-size:200% 100%}
+    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+
+    /* ===== QR RADAR ===== */
+    .radar-ring{position:absolute;border:2px solid;border-radius:50%;animation:radarPulse 2s ease-out infinite}
+    @keyframes radarPulse{0%{transform:scale(.5);opacity:.8}100%{transform:scale(2);opacity:0}}
+
+    /* ===== BANK WIRE ===== */
+    .wire-dot{width:8px;height:8px;border-radius:50%;position:absolute;animation:wireTravel 2s linear infinite}
+    @keyframes wireTravel{0%{left:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{left:100%;opacity:0}}
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes bounceIn{0%{opacity:0;transform:scale(.3)}50%{transform:scale(1.05)}70%{transform:scale(.9)}100%{opacity:1;transform:scale(1)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes checkDraw{0%{stroke-dashoffset:100}100%{stroke-dashoffset:0}}
+    @keyframes progressBar{0%{width:0}100%{width:100%}}
+    @keyframes confetti{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(250px) rotate(720deg)}}
+    @keyframes slideIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    @keyframes glow{0%,100%{box-shadow:0 0 20px rgba(249,115,22,0.2)}50%{box-shadow:0 0 40px rgba(249,115,22,0.4)}}
+    @keyframes typewriter{from{width:0}to{width:100%}}
+    @keyframes scanLine{0%{top:0}100%{top:100%}}
+    @keyframes coinSpin{0%{transform:rotateY(0)}100%{transform:rotateY(360deg)}}
+    @keyframes vaultOpen{0%{transform:perspective(500px) rotateY(0)}100%{transform:perspective(500px) rotateY(-30deg)}}
+    @keyframes splitFill{0%{width:0}100%{width:100%}}
+
+    .fade-up{animation:fadeInUp .5s ease forwards}
+    .bounce-in{animation:bounceIn .6s ease forwards}
+    .slide-in{animation:slideIn .4s ease forwards}
+    .spinner{width:48px;height:48px;border:3px solid rgba(249,115,22,0.2);border-top-color:#F97316;border-radius:50%;animation:spin .8s linear infinite}
+    .confetti-p{position:absolute;animation:confetti 1.5s ease forwards}
+
+    .toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0}
+    .toggle-switch input{opacity:0;width:0;height:0}
+    .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#525252;border-radius:24px;transition:.3s}
+    .toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s}
+    .toggle-switch input:checked+.toggle-slider{background:#F97316}
+    .toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px)}
+
+    .toast{position:fixed;bottom:24px;right:24px;z-index:9999;padding:12px 20px;border-radius:10px;font-size:14px;transform:translateY(100px);opacity:0;transition:all .3s;font-weight:500}
+    .toast.show{transform:translateY(0);opacity:1}
+    .dark .toast{background:#F97316;color:white}
+    html:not(.dark) .toast{background:#EA580C;color:white}
+
+    .method-card{transition:all .3s cubic-bezier(.4,0,.2,1);cursor:pointer;position:relative;overflow:hidden}
+    .method-card:hover{transform:translateY(-4px)}
+    .dark .method-card:hover{box-shadow:0 8px 30px rgba(249,115,22,0.08);background:rgba(255,255,255,0.05)}
+    html:not(.dark) .method-card:hover{box-shadow:0 8px 30px rgba(0,0,0,0.08);background:rgba(255,255,255,0.9)}
+    .input-f{transition:all .2s}.input-f:focus{border-color:#F97316!important;box-shadow:0 0 0 3px rgba(249,115,22,0.1)}
+
+    .cat-tab{transition:all .2s;cursor:pointer}
+    .dark .cat-tab:hover,.dark .cat-tab.active{background:rgba(249,115,22,0.1);color:#F97316;border-color:rgba(249,115,22,0.3)}
+    html:not(.dark) .cat-tab:hover,html:not(.dark) .cat-tab.active{background:rgba(249,115,22,0.05);color:#EA580C;border-color:rgba(249,115,22,0.3)}
+
+    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#525252;border-radius:3px}
+  </style>
+</head>
+<body class="bg-neutral-950 text-white dark:bg-neutral-950 dark:text-white min-h-screen transition-colors duration-300">
+
+<div id="toast" class="toast"></div>
+
+<!-- NAV -->
+<nav class="fixed top-0 left-0 right-0 h-16 z-50 flex items-center px-4 md:px-6 border-b dark:border-neutral-800 border-neutral-200 dark:bg-neutral-950/80 bg-white/80 backdrop-blur-md transition-colors">
+  <div class="max-w-7xl mx-auto w-full flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center"><i data-lucide="zap" class="w-5 h-5 text-white"></i></div>
+      <span class="text-lg font-semibold dark:text-white text-neutral-900">PayNova</span>
+      <span class="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 font-semibold uppercase tracking-wider">Unique Flows</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="toggleTheme()" class="w-9 h-9 rounded-lg flex items-center justify-center dark:hover:bg-neutral-800 hover:bg-neutral-100 transition-colors"><i data-lucide="moon" class="w-4 h-4 dark:text-neutral-400 text-neutral-600"></i></button>
+      <button onclick="showView('home')" class="text-xs px-3 py-1.5 rounded-lg border dark:border-neutral-700 border-neutral-300 dark:text-neutral-300 text-neutral-600 dark:hover:bg-neutral-800 hover:bg-neutral-100 transition-colors flex items-center gap-1"><i data-lucide="home" class="w-3 h-3"></i>Methods</button>
+      <button onclick="showView('settings')" class="text-xs px-3 py-1.5 rounded-lg border dark:border-neutral-700 border-neutral-300 dark:text-neutral-300 text-neutral-600 dark:hover:bg-neutral-800 hover:bg-neutral-100 transition-colors flex items-center gap-1"><i data-lucide="settings" class="w-3 h-3"></i>Settings</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div id="homeView" class="pt-24 pb-16 px-4">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-10">
+      <h1 class="text-3xl md:text-5xl font-medium tracking-tight dark:text-white text-neutral-900 mb-3">Every payment, <span class="text-orange-500">uniquely crafted</span></h1>
+      <p class="dark:text-neutral-400 text-neutral-500 max-w-xl mx-auto text-sm">Each method has its own distinct visual experience. Click any card to explore.</p>
+    </div>
+    <div class="flex flex-wrap justify-center gap-2 mb-8" id="catTabs"></div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3" id="methodGrid"></div>
+  </div>
+</div>
+
+<!-- FLOW -->
+<div id="flowView" class="pt-24 pb-16 px-4 hidden">
+  <div class="max-w-2xl mx-auto">
+    <button onclick="showView('home')" class="flex items-center gap-2 text-sm dark:text-neutral-400 text-neutral-500 hover:text-orange-500 transition-colors mb-6"><i data-lucide="arrow-left" class="w-4 h-4"></i>All Methods</button>
+    <div id="stepBar" class="mb-10"></div>
+    <div id="flowContent"></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="settingsView" class="pt-24 pb-16 px-4 hidden">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-10">
+      <h2 class="text-3xl font-medium dark:text-white text-neutral-900 mb-3">Gateway <span class="text-orange-500">Configuration</span></h2>
+      <p class="text-sm dark:text-neutral-400 text-neutral-500">50+ settings to fine-tune your payment experience</p>
+    </div>
+    <div id="settingsContent"></div>
+  </div>
+</div>
+
+<script>
+lucide.createIcons();
+
+const M=[
+  // Cards 1-6 → flow: card
+  {id:'visa',n:'Visa',cat:'Cards',icon:'credit-card',c:'blue',flow:'card',brand:'VISA',bc:'#1A1F71',grad:'linear-gradient(135deg,#0c0c1d,#1a0a2e,#0d1b3e)'},
+  {id:'mastercard',n:'Mastercard',cat:'Cards',icon:'credit-card',c:'red',flow:'card',brand:'MC',bc:'#EB001B',grad:'linear-gradient(135deg,#1a0000,#2d0a0a,#1a0a2e)'},
+  {id:'amex',n:'Amex',cat:'Cards',icon:'credit-card',c:'blue',flow:'card',brand:'AMEX',bc:'#006FCF',grad:'linear-gradient(135deg,#001a33,#00264d,#00134d)'},
+  {id:'discover',n:'Discover',cat:'Cards',icon:'credit-card',c:'orange',flow:'card',brand:'DISC',bc:'#FF6000',grad:'linear-gradient(135deg,#1a0d00,#2d1a00,#1a0a00)'},
+  {id:'diners',n:'Diners Club',cat:'Cards',icon:'credit-card',c:'cyan',flow:'card',brand:'DC',bc:'#0079BE',grad:'linear-gradient(135deg,#001a2e,#002a4d,#001a3d)'},
+  {id:'jcb',n:'JCB',cat:'Cards',icon:'credit-card',c:'green',flow:'card',brand:'JCB',bc:'#0E4C96',grad:'linear-gradient(135deg,#001a0d,#00261a,#00134d)'},
+  // Mobile 7-11 → flow: biometric
+  {id:'applepay',n:'Apple Pay',cat:'Mobile',icon:'smartphone',c:'gray',flow:'biometric',device:'iPhone',deviceColor:'#1d1d1f',accent:'#fff'},
+  {id:'googlepay',n:'Google Pay',cat:'Mobile',icon:'smartphone',c:'green',flow:'biometric',device:'Android',deviceColor:'#202124',accent:'#34A853'},
+  {id:'samsungpay',n:'Samsung Pay',cat:'Mobile',icon:'smartphone',c:'blue',flow:'biometric',device:'Galaxy',deviceColor:'#1428a0',accent:'#1428a0'},
+  {id:'fitbitpay',n:'Fitbit Pay',cat:'Mobile',icon:'watch',c:'teal',flow:'biometric',device:'Fitbit',deviceColor:'#00b0b9',accent:'#00b0b9'},
+  {id:'garminpay',n:'Garmin Pay',cat:'Mobile',icon:'watch',c:'blue',flow:'biometric',device:'Garmin',deviceColor:'#007cc3',accent:'#007cc3'},
+  // Wallets 12-16 → flow: login
+  {id:'paypal',n:'PayPal',cat:'Wallets',icon:'wallet',c:'blue',flow:'login',brandBg:'#003087',brandAccent:'#009cde'},
+  {id:'venmo',n:'Venmo',cat:'Wallets',icon:'send',c:'blue',flow:'login',brandBg:'#008CFF',brandAccent:'#00D6AA'},
+  {id:'cashapp',n:'Cash App',cat:'Wallets',icon:'dollar-sign',c:'green',flow:'login',brandBg:'#00C246',brandAccent:'#00D6AA'},
+  {id:'zelle',n:'Zelle',cat:'Wallets',icon:'arrow-right-left',c:'purple',flow:'login',brandBg:'#6B21A8',brandAccent:'#A855F7'},
+  {id:'amazonpay',n:'Amazon Pay',cat:'Wallets',icon:'shopping-bag',c:'orange',flow:'login',brandBg:'#FF9900',brandAccent:'#232F3E'},
+  // BNPL 17-21 → flow: bnpl
+  {id:'klarna',n:'Klarna',cat:'BNPL',icon:'calendar-check',c:'pink',flow:'bnpl',brandColor:'#FFB3C7',brandBg:'#FFB3C7'},
+  {id:'afterpay',n:'Afterpay',cat:'BNPL',icon:'calendar',c:'teal',flow:'bnpl',brandColor:'#2EC4B6',brandBg:'#2EC4B6'},
+  {id:'affirm',n:'Affirm',cat:'BNPL',icon:'badge-check',c:'blue',flow:'bnpl',brandColor:'#0055FF',brandBg:'#0055FF'},
+  {id:'zip',n:'Zip',cat:'BNPL',icon:'layers',c:'purple',flow:'bnpl',brandColor:'#7C3AED',brandBg:'#7C3AED'},
+  {id:'sezzle',n:'Sezzle',cat:'BNPL',icon:'grid-3x3',c:'violet',flow:'bnpl',brandColor:'#6D28D9',brandBg:'#6D28D9'},
+  // Bank 22-26 → flow: bank
+  {id:'ach',n:'ACH Direct',cat:'Bank',icon:'landmark',c:'green',flow:'bank',bankIcon:'building-2',route:'Federal Reserve'},
+  {id:'sepa',n:'SEPA Transfer',cat:'Bank',icon:'landmark',c:'blue',flow:'bank',bankIcon:'landmark',route:'ECB Network'},
+  {id:'wire',n:'Wire Transfer',cat:'Bank',icon:'cable',c:'purple',flow:'bank',bankIcon:'cable',route:'SWIFT Network'},
+  {id:'faster',n:'Faster Payments',cat:'Bank',icon:'zap',c:'orange',flow:'bank',bankIcon:'zap',route:'UK FPS'},
+  {id:'bacs',n:'BACS',cat:'Bank',icon:'building-2',c:'emerald',flow:'bank',bankIcon:'building-2',route:'BACS Scheme'},
+  // Crypto 27-31 → flow: crypto
+  {id:'btc',n:'Bitcoin',cat:'Crypto',icon:'bitcoin',c:'orange',flow:'crypto',coin:'BTC',coinColor:'#F7931A',coinAddr:'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'},
+  {id:'eth',n:'Ethereum',cat:'Crypto',icon:'hexagon',c:'blue',flow:'crypto',coin:'ETH',coinColor:'#627EEA',coinAddr:'0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18'},
+  {id:'usdt',n:'USDT',cat:'Crypto',icon:'circle-dot',c:'green',flow:'crypto',coin:'USDT',coinColor:'#26A17B',coinAddr:'TN2Y4r3Cf8WQz3d5UMEwGDMbQVXT2cKJoA'},
+  {id:'usdc',n:'USDC',cat:'Crypto',icon:'coins',c:'blue',flow:'crypto',coin:'USDC',coinColor:'#2775CA',coinAddr:'0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18'},
+  {id:'ltc',n:'Litecoin',cat:'Crypto',icon:'circle',c:'gray',flow:'crypto',coin:'LTC',coinColor:'#345D9D',coinAddr:'ltc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'},
+  // Asia 32-39 → flow: qr
+  {id:'wechat',n:'WeChat Pay',cat:'Asia',icon:'message-circle',c:'green',flow:'qr',appColor:'#07C160'},
+  {id:'alipay',n:'Alipay',cat:'Asia',icon:'shield',c:'blue',flow:'qr',appColor:'#1677FF'},
+  {id:'grabpay',n:'GrabPay',cat:'Asia',icon:'car',c:'green',flow:'qr',appColor:'#00B14F'},
+  {id:'gopay',n:'GoPay',cat:'Asia',icon:'circle-dot',c:'green',flow:'qr',appColor:'#00AED6'},
+  {id:'ovo',n:'OVO',cat:'Asia',icon:'hexagon',c:'purple',flow:'qr',appColor:'#4C3494'},
+  {id:'dana',n:'DANA',cat:'Asia',icon:'diamond',c:'blue',flow:'qr',appColor:'#118EEA'},
+  {id:'paytm',n:'PayTM',cat:'Asia',icon:'wallet',c:'blue',flow:'qr',appColor:'#00BAF2'},
+  {id:'phonepe',n:'PhonePe',cat:'Asia',icon:'phone',c:'purple',flow:'qr',appColor:'#5F259F'},
+  // Europe 40-46 → flow: redirect
+  {id:'ideal',n:'iDEAL',cat:'Europe',icon:'shield-check',c:'green',flow:'redirect',bankName:'ABN AMRO',flag:'🇳🇱'},
+  {id:'sofort',n:'Sofort',cat:'Europe',icon:'arrow-right',c:'orange',flow:'redirect',bankName:'Deutsche Bank',flag:'🇩🇪'},
+  {id:'giropay',n:'Giropay',cat:'Europe',icon:'building',c:'blue',flow:'redirect',bankName:'Commerzbank',flag:'🇩🇪'},
+  {id:'bancontact',n:'Bancontact',cat:'Europe',icon:'credit-card',c:'blue',flow:'redirect',bankName:'KBC Bank',flag:'🇧🇪'},
+  {id:'eps',n:'EPS',cat:'Europe',icon:'landmark',c:'red',flow:'redirect',bankName:'Erste Bank',flag:'🇦🇹'},
+  {id:'swish',n:'Swish',cat:'Europe',icon:'zap',c:'blue',flow:'qr',appColor:'#FF6D00'},
+  {id:'blik',n:'BLIK',cat:'Europe',icon:'grid-2x2',c:'red',flow:'redirect',bankName:'PKO BP',flag:'🇵🇱'},
+  // LatAm 47-50 → flow: qr/redirect
+  {id:'pix',n:'Pix',cat:'LatAm',icon:'zap',c:'green',flow:'qr',appColor:'#32BCAD'},
+  {id:'boleto',n:'Boleto',cat:'LatAm',icon:'file-text',c:'green',flow:'redirect',bankName:'Banco do Brasil',flag:'🇧🇷'},
+  {id:'oxxo',n:'OXXO',cat:'LatAm',icon:'store',c:'yellow',flow:'redirect',bankName:'OXXO Store',flag:'🇲🇽'},
+  {id:'mercadopago',n:'Mercado Pago',cat:'LatAm',icon:'shopping-cart',c:'blue',flow:'login',brandBg:'#009EE3',brandAccent:'#FFE600'},
+  // Other 51-55
+  {id:'interac',n:'Interac',cat:'Other',icon:'arrow-right-left',c:'orange',flow:'redirect',bankName:'TD Canada',flag:'🇨🇦'},
+  {id:'p24',n:'Przelewy24',cat:'Other',icon:'arrow-right',c:'red',flow:'redirect',bankName:'ING Poland',flag:'🇵🇱'},
+  {id:'konbini',n:'Konbini',cat:'Other',icon:'store',c:'orange',flow:'redirect',bankName:'7-Eleven JP',flag:'🇯🇵'},
+  {id:'multibanco',n:'Multibanco',cat:'Other',icon:'landmark',c:'blue',flow:'redirect',bankName:'SIBS',flag:'🇵🇹'},
+  {id:'shopay',n:'Shop Pay',cat:'Other',icon:'shopping-bag',c:'green',flow:'login',brandBg:'#008060',brandAccent:'#95D5B2'},
+];
+
+const SETS=[
+  {cat:'Payment Settings',items:[
+    {n:'Card Payments',d:'Accept credit & debit cards',i:'credit-card',c:'blue',on:true},
+    {n:'Mobile Wallets',d:'Apple Pay, Google Pay, etc',i:'smartphone',c:'green',on:true},
+    {n:'Digital Wallets',d:'PayPal, Venmo, Cash App',i:'wallet',c:'purple',on:true},
+    {n:'Buy Now Pay Later',d:'Klarna, Afterpay, Affirm',i:'calendar-check',c:'pink',on:true},
+    {n:'Bank Transfers',d:'ACH, SEPA, Wire transfers',i:'landmark',c:'emerald',on:true},
+    {n:'Crypto Payments',d:'BTC, ETH, USDT, USDC',i:'bitcoin',c:'cyan',on:false},
+    {n:'QR Code Payments',d:'WeChat, Alipay, Swish',i:'qr-code',c:'green',on:true},
+    {n:'Recurring Billing',d:'Auto-charge subscriptions',i:'repeat',c:'blue',on:true},
+    {n:'One-Click Pay',d:'Saved card instant checkout',i:'mouse-pointer-click',c:'orange',on:true},
+    {n:'Auto-Capture',d:'Auto-settle authorized payments',i:'check-circle',c:'green',on:true},
+  ]},
+  {cat:'Security & Fraud',items:[
+    {n:'3D Secure 2.0',d:'Require cardholder authentication',i:'shield-check',c:'orange',on:true},
+    {n:'Fraud Detection',d:'AI-powered risk scoring',i:'scan-eye',c:'red',on:true},
+    {n:'CVV Required',d:'Require CVV for all cards',i:'lock',c:'green',on:true},
+    {n:'AVS Check',d:'Address verification system',i:'map-pin',c:'blue',on:true},
+    {n:'IP Blocking',d:'Block suspicious IP addresses',i:'ban',c:'red',on:false},
+    {n:'Velocity Limits',d:'Rate limit per user',i:'gauge',c:'yellow',on:true},
+    {n:'Tokenization',d:'Secure card data vault',i:'key-round',c:'purple',on:true},
+    {n:'256-bit Encryption',d:'SSL/TLS encryption',i:'shield',c:'blue',on:true},
+    {n:'Risk Scoring',d:'ML-based analysis',i:'bar-chart-3',c:'orange',on:true},
+    {n:'Country Blocking',d:'Geo-based filtering',i:'globe',c:'red',on:false},
+  ]},
+  {cat:'Notifications',items:[
+    {n:'Email Receipts',d:'Send receipt after payment',i:'mail',c:'blue',on:true},
+    {n:'SMS Alerts',d:'Text message notifications',i:'message-square',c:'green',on:false},
+    {n:'Webhook Events',d:'Push to your server',i:'webhook',c:'purple',on:true},
+    {n:'Slack Notifications',d:'Post to Slack channel',i:'hash',c:'teal',on:false},
+    {n:'Discord Alerts',d:'Post to Discord webhook',i:'message-circle',c:'violet',on:false},
+    {n:'Failed Payment Alerts',d:'Notify on declined',i:'alert-triangle',c:'red',on:true},
+    {n:'Refund Alerts',d:'Notify on refund',i:'undo-2',c:'orange',on:true},
+    {n:'Dispute Alerts',d:'Notify on chargebacks',i:'alert-circle',c:'red',on:true},
+    {n:'Daily Summary',d:'Daily transaction report',i:'calendar',c:'blue',on:true},
+    {n:'Weekly Analytics',d:'Weekly performance report',i:'bar-chart',c:'green',on:false},
+  ]},
+  {cat:'Checkout Experience',items:[
+    {n:'Custom Branding',d:'Logo, colors, fonts',i:'palette',c:'pink',on:true},
+    {n:'Dark Mode Checkout',d:'Auto dark/light theme',i:'moon',c:'purple',on:true},
+    {n:'Redirect Mode',d:'Hosted payment page',i:'external-link',c:'blue',on:false},
+    {n:'Embedded Mode',d:'Inline checkout',i:'code',c:'green',on:true},
+    {n:'Multi-Language',d:'35+ languages',i:'languages',c:'cyan',on:true},
+    {n:'Multi-Currency',d:'135+ currencies',i:'circle-dollar-sign',c:'emerald',on:true},
+    {n:'Auto-Detect Country',d:'Smart geo-location',i:'map',c:'orange',on:true},
+    {n:'Save Cards',d:'Allow card saving',i:'heart',c:'red',on:true},
+    {n:'Guest Checkout',d:'No account required',i:'user-x',c:'blue',on:true},
+    {n:'Terms & Conditions',d:'Require T&C acceptance',i:'file-check',c:'yellow',on:false},
+  ]},
+  {cat:'Business Settings',items:[
+    {n:'Business Name',d:'Statement display name',i:'building-2',c:'blue',on:true},
+    {n:'Custom Logo',d:'Brand logo upload',i:'image',c:'purple',on:true},
+    {n:'Support Email',d:'Customer support email',i:'mail',c:'green',on:true},
+    {n:'Support Phone',d:'Support phone number',i:'phone',c:'teal',on:true},
+    {n:'Tax Calculation',d:'Auto tax by region',i:'calculator',c:'orange',on:true},
+    {n:'Invoice Generation',d:'Auto-generate invoices',i:'file-text',c:'emerald',on:true},
+    {n:'Payment Links',d:'Shareable payment links',i:'link',c:'yellow',on:true},
+    {n:'Multi-Team Access',d:'Role-based permissions',i:'users',c:'blue',on:true},
+    {n:'API Keys',d:'Manage API access',i:'key',c:'red',on:true},
+    {n:'Sandbox Mode',d:'Test environment',i:'flask-conical',c:'purple',on:true},
+  ]},
+];
+
+let cur=null,step=0,steps=4,activeCat='All';
+
+function showView(v){['homeView','flowView','settingsView'].forEach(x=>document.getElementById(x).classList.add('hidden'));document.getElementById(v+'View').classList.remove('hidden');if(v==='home')renderHome();if(v==='settings')renderSets();}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+function toggleTheme(){const h=document.documentElement,b=document.body,d=h.classList.contains('dark');if(d){h.classList.remove('dark');b.classList.remove('bg-neutral-950','text-white');b.classList.add('bg-white','text-neutral-900')}else{h.classList.add('dark');b.classList.remove('bg-white','text-neutral-900');b.classList.add('bg-neutral-950','text-white')}lucide.createIcons()}
+
+// HOME
+function renderHome(){
+  const cats=['All',...new Set(M.map(m=>m.cat))];
+  document.getElementById('catTabs').innerHTML=cats.map(c=>`<button onclick="activeCat='${c}';renderHome()" class="cat-tab text-xs px-3 py-1.5 rounded-full border dark:border-neutral-700 border-neutral-300 dark:text-neutral-400 text-neutral-500 ${activeCat===c?'active':''}">${c}</button>`).join('');
+  const list=activeCat==='All'?M:M.filter(m=>m.cat===activeCat);
+  document.getElementById('methodGrid').innerHTML=list.map((m,i)=>`
+    <div onclick="startFlow('${m.id}')" class="method-card glass rounded-xl p-4 text-center" style="animation:fadeInUp .4s ease ${i*0.03}s both">
+      <div class="w-11 h-11 rounded-xl bg-${m.c}-500/10 flex items-center justify-center mx-auto mb-2"><i data-lucide="${m.icon}" class="w-5 h-5 text-${m.c}-400"></i></div>
+      <div class="text-xs font-medium dark:text-white text-neutral-900 leading-tight">${m.n}</div>
+      <div class="text-[10px] dark:text-neutral-500 text-neutral-400 mt-0.5">${m.cat}</div>
+    </div>`).join('');
+  lucide.createIcons();
+}
+
+// FLOW
+function startFlow(id){cur=M.find(m=>m.id===id);step=1;const sm={card:4,login:4,bank:4,crypto:4,biometric:3,bnpl:4,qr:4,redirect:4};steps=sm[cur.flow]||4;showView('flow');drawSteps();drawContent()}
+function drawSteps(){
+  const names={card:['Card Details','Confirm','Processing','Receipt'],login:['Sign In','Authorize','Processing','Receipt'],bank:['Account','Verify','Processing','Receipt'],crypto:['Wallet','Confirm','Processing','Receipt'],biometric:['Authenticate','Processing','Receipt'],bnpl:['Choose Plan','Confirm','Processing','Receipt'],qr:['Scan QR','Verify','Processing','Receipt'],redirect:['Redirect','Approve','Processing','Receipt']};
+  const sn=names[cur.flow]||['Step 1','Step 2','Processing','Receipt'];
+  let h='';
+  for(let i=1;i<=steps;i++){const d=i<step,a=i===step;
+    h+=`<div class="flex flex-col items-center" style="animation:fadeInUp .3s ease ${i*.08}s both">
+      <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-all ${d?'bg-orange-500 border-orange-500 text-white':a?'border-orange-500 text-orange-400 dark:bg-orange-500/10':'border-neutral-700 dark:text-neutral-600 text-neutral-400'}">${d?'<i data-lucide="check" class="w-3.5 h-3.5"></i>':i}</div>
+      <div class="text-[9px] mt-1.5 dark:text-neutral-500 text-neutral-400 max-w-[60px] text-center leading-tight">${sn[i-1]}</div></div>`;
+    if(i<steps)h+=`<div class="flex-1 h-0.5 mt-5 mx-1.5 rounded-full transition-all ${i<step?'bg-orange-500':'dark:bg-neutral-800 bg-neutral-200'}"></div>`;
+  }
+  document.getElementById('stepBar').innerHTML=h;lucide.createIcons();
+}
+function next(){if(step<steps){step++;drawSteps();drawContent()}}
+function drawContent(){
+  const a=document.getElementById('flowContent');a.innerHTML='';
+  const flows={card:[cardS1,cardS2,procS,receiptS],login:[loginS1,loginS2,procS,receiptS],bank:[bankS1,bankS2,procS,receiptS],crypto:[cryptoS1,cryptoS2,procS,receiptS],biometric:[bioS1,procS,receiptS],bnpl:[bnplS1,bnplS2,procS,receiptS],qr:[qrS1,qrS2,procS,receiptS],redirect:[redirS1,redirS2,procS,receiptS]};
+  (flows[cur.flow]||flows.card)[step-1](a);
+}
+
+/* ============================================================
+   CARD FLOW — Elegant 3D Card with Holographic Effect
+   ============================================================ */
+function cardS1(a){
+  a.innerHTML=`
+  <div class="fade-up">
+    <div class="text-center mb-5">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs font-medium mb-3"><i data-lucide="sparkles" class="w-3 h-3"></i>Premium Card Experience</div>
+      <h2 class="text-xl font-medium dark:text-white text-neutral-900 mb-1">Enter Your ${cur.n}</h2>
+      <p class="text-[11px] dark:text-neutral-400 text-neutral-500">Watch the card come alive as you type</p>
+    </div>
+    <div class="flex justify-center mb-5">
+      <div class="card-perspective">
+        <div class="card-body" id="cBody">
+          <div class="card-face card-front" id="cFront" style="background:${cur.grad}">
+            <div class="flex justify-between items-start mb-5">
+              <div class="chip"></div>
+              <div class="flex items-center gap-2">
+                <svg class="contactless w-6 h-6" viewBox="0 0 24 24"><path d="M9 4c4 4 4 12 0 16M6 7c2.5 2.5 2.5 7.5 0 10M3 10c1 1 1 3 0 4" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                <div id="cBrand" class="text-sm font-bold tracking-wider" style="color:${cur.bc}">${cur.brand}</div>
+              </div>
+            </div>
+            <div id="cNumD" class="text-lg tracking-[3px] font-mono text-white/90 mb-4">•••• •••• •••• ••••</div>
+            <div class="flex justify-between items-end">
+              <div><div class="text-[7px] uppercase text-white/35 tracking-[.2em] mb-0.5">Card Holder</div><div id="cNameD" class="text-xs tracking-wider text-white/80 uppercase">YOUR NAME</div></div>
+              <div class="text-right"><div class="text-[7px] uppercase text-white/35 tracking-[.2em] mb-0.5">Expires</div><div id="cExpD" class="text-xs text-white/80">MM/YY</div></div>
+            </div>
+          </div>
+          <div class="card-face card-back" style="background:${cur.grad}">
+            <div class="mag-strip"></div>
+            <div class="sig-box"><span id="cCvvD" class="text-base tracking-[4px] font-mono text-neutral-800">•••</span></div>
+            <div class="mt-4 text-right pr-5"><div class="text-xs font-bold" style="color:${cur.bc}">${cur.brand}</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="glass rounded-2xl p-5 space-y-3 max-w-md mx-auto">
+      <div><label class="text-[10px] dark:text-neutral-400 text-neutral-500 mb-1 block uppercase tracking-wider">Card Number</label>
+        <input id="cNum" maxlength="19" placeholder="1234 5678 9012 3456" class="input-f w-full dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-2.5 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none font-mono" oninput="fmtC(this)">
+      </div>
+      <div><label class="text-[10px] dark:text-neutral-400 text-neutral-500 mb-1 block uppercase tracking-wider">Cardholder Name</label>
+        <input id="cName" placeholder="John Doe" class="input-f w-full dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-2.5 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none" oninput="document.getElementById('cNameD').textContent=this.value?this.value.toUpperCase():'YOUR NAME'">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-[10px] dark:text-neutral-400 text-neutral-500 mb-1 block uppercase tracking-wider">Expiry</label>
+          <input id="cExp" maxlength="5" placeholder="MM/YY" class="input-f w-full dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-2.5 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none font-mono" oninput="fmtE(this)">
+        </div>
+        <div><label class="text-[10px] dark:text-neutral-400 text-neutral-500 mb-1 block uppercase tracking-wider">CVV</label>
+          <input id="cCvv" maxlength="4" placeholder="•••" class="input-f w-full dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-2.5 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none font-mono" oninput="document.getElementById('cCvvD').textContent=this.value||'•••'" onfocus="document.getElementById('cBody').classList.add('flipped')" onblur="document.getElementById('cBody').classList.remove('flipped')">
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-[10px] dark:text-neutral-500 text-neutral-400 pt-1"><i data-lucide="lock" class="w-3 h-3 text-green-400"></i>PCI DSS Level 1 · 256-bit Encryption</div>
+      <button onclick="next()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2.5 rounded-lg transition-colors text-sm">Continue <i data-lucide="arrow-right" class="w-4 h-4 inline"></i></button>
+    </div>
+  </div>`;lucide.createIcons();
+}
+function fmtC(e){let v=e.value.replace(/\D/g,'').substring(0,16);e.value=v.replace(/(.{4})/g,'$1 ').trim();const d=document.getElementById('cNumD');if(!v)d.textContent='•••• •••• •••• ••••';else{let p=[];for(let i=0;i<4;i++){const s=v.substring(i*4,(i+1)*4);p.push(s||'••••')}d.textContent=p.join(' ')}}
+function fmtE(e){let v=e.value.replace(/\D/g,'').substring(0,4);if(v.length>=3)v=v.substring(0,2)+'/'+v.substring(2);e.value=v;document.getElementById('cExpD').textContent=v||'MM/YY'}
+
+function cardS2(a){
+  const n=document.getElementById('cNum')?.value||'4242 4242 4242 4242',nm=document.getElementById('cName')?.value||'John Doe',ex=document.getElementById('cExp')?.value||'12/26';
+  a.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4" style="animation:glow 2s ease infinite"><i data-lucide="shield-check" class="w-8 h-8 text-purple-400"></i></div>
+    <h2 class="text-xl font-medium dark:text-white text-neutral-900 mb-1">Secure Confirmation</h2>
+    <p class="text-[11px] dark:text-neutral-400 text-neutral-500 mb-6">3D Secure will verify your identity</p>
+    <div class="glass rounded-2xl p-5 max-w-md mx-auto text-left space-y-2.5">
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Amount</span><span class="text-xl font-bold dark:text-white text-neutral-900">$299.00</span></div>
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">${cur.n}</span><span class="text-sm dark:text-white text-neutral-900 font-mono">${n}</span></div>
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Name</span><span class="text-sm dark:text-white text-neutral-900">${nm}</span></div>
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Expiry</span><span class="text-sm dark:text-white text-neutral-900">${ex}</span></div>
+      <div class="flex justify-between py-2"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Processing Fee</span><span class="text-sm text-green-400 font-medium">$0.00</span></div>
+      <div class="flex items-center gap-2 bg-purple-500/5 rounded-lg p-3 mt-2"><i data-lucide="fingerprint" class="w-5 h-5 text-purple-400"></i><div class="text-[11px] dark:text-purple-300 text-purple-600">3D Secure authentication will be triggered</div></div>
+      <button onclick="next()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-2">Pay $299.00 Securely</button>
+      <button onclick="step=1;drawSteps();drawContent()" class="w-full text-[11px] dark:text-neutral-400 text-neutral-500 hover:text-orange-400 py-1">Edit card details</button>
+    </div>
+  </div>`;lucide.createIcons();
+}
+
+/* ============================================================
+   LOGIN FLOW — Split Brand Layout
+   ============================================================ */
+function loginS1(a){
+  a.innerHTML=`
+  <div class="fade-up">
+    <div class="glass rounded-2xl overflow-hidden max-w-md mx-auto">
+      <div class="p-6 text-center" style="background:${cur.brandBg||'#333'}">
+        <div class="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-3"><i data-lucide="${cur.icon}" class="w-8 h-8" style="color:${cur.brandAccent||'#fff'}"></i></div>
+        <div class="text-white font-semibold text-lg">${cur.n}</div>
+        <div class="text-white/60 text-xs mt-1">Sign in to continue payment</div>
+      </div>
+      <div class="p-5 space-y-3">
+        <div><label class="text-[10px] dark:text-neutral-400 text-neutral-500 mb-1 block">Email or Username</label>
+          <input type="email" placeholder="you@email.com" value="user@${cur.id}.com" class="input-f w-full dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-2.5 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none">
+        </div>
+        <div><label class="text-[10px] dark:text-neutral-400 text-neutral-500 mb-1 block">Password</label>
+          <input type="password" value="password123" class="input-f w-full dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-2.5 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none">
+        </div>
+        <div class="flex items-center justify-between">
+          <label class="flex items-center gap-2"><input type="checkbox" checked class="accent-orange-500"><span class="text-[10px] dark:text-neutral-400 text-neutral-500">Remember me</span></label>
+          <a href="#" class="text-[10px] text-orange-500 hover:underline">Forgot?</a>
+        </div>
+        <button onclick="next()" class="w-full text-white font-medium py-2.5 rounded-lg transition-colors text-sm" style="background:${cur.brandBg||'#F97316'}">Log In & Continue</button>
+      </div>
+    </div>
+  </div>`;lucide.createIcons();
+}
+
+function loginS2(a){
+  a.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="glass rounded-2xl overflow-hidden max-w-md mx-auto">
+      <div class="p-5 flex items-center gap-4 border-b dark:border-neutral-800 border-neutral-200">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background:${cur.brandBg||'#333'}"><i data-lucide="${cur.icon}" class="w-6 h-6 text-white"></i></div>
+        <div class="text-left"><div class="text-sm font-medium dark:text-white text-neutral-900">${cur.n} Balance</div><div class="text-lg font-bold dark:text-white text-neutral-900">$1,249.50</div></div>
+      </div>
+      <div class="p-5 space-y-3 text-left">
+        <div class="flex justify-between py-2"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Merchant</span><span class="text-sm dark:text-white text-neutral-900">PayNova Store</span></div>
+        <div class="flex justify-between py-2"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Amount</span><span class="text-xl font-bold dark:text-white text-neutral-900">$299.00</span></div>
+        <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">After Payment</span><span class="text-sm dark:text-white text-neutral-900">$950.50</span></div>
+        <button onclick="next()" class="w-full text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-2" style="background:${cur.brandBg||'#F97316'}">Confirm & Pay</button>
+      </div>
+    </div>
+  </div>`;lucide.createIcons();
+}
+
+/* ============================================================
+   BANK FLOW — Wire Transfer Visual with Network Animation
+   ============================================================ */
+function bankS1(a){
+  const fields={
+    ach:[{l:'Account Holder',v:'John Doe',icon:'user'},{l:'Account Number',v:'4455667788',icon:'hash'},{l:'Routing Number',v:'021000021',icon:'route'},{l:'Type',v:'Checking',icon:'building-2'}],
+    sepa:[{l:'Account Holder',v:'Hans Müller',icon:'user'},{l:'IBAN',v:'DE89 3704 0044 0532 0130 00',icon:'hash'},{l:'BIC/SWIFT',v:'COBADEFFXXX',icon:'route'}],
+    wire:[{l:'Beneficiary',v:'John Doe',icon:'user'},{l:'Account',v:'4455667788',icon:'hash'},{l:'SWIFT Code',v:'CHASUS33',icon:'cable'},{l:'Bank',v:'JPMorgan Chase',icon:'building-2'}],
+    faster:[{l:'Account Holder',v:'John Smith',icon:'user'},{l:'Sort Code',v:'20-30-40',icon:'route'},{l:'Account Number',v:'12345678',icon:'hash'}],
+    bacs:[{l:'Account Holder',v:'John Smith',icon:'user'},{l:'Sort Code',v:'20-30-40',icon:'route'},{l:'Account Number',v:'12345678',icon:'hash'}],
+  };
+  const f=fields[cur.id]||fields.ach;
+  a.innerHTML=`
+  <div class="fade-up text-center">
+    <!-- Wire Network Visual -->
+    <div class="relative h-20 mb-6 max-w-md mx-auto">
+      <div class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center border border-green-500/30" style="animation:float 3s ease infinite"><i data-lucide="user" class="w-5 h-5 text-green-400"></i></div>
+      <div class="absolute left-16 right-16 top-1/2 h-0.5 dark:bg-neutral-800 bg-neutral-200 -translate-y-1/2">
+        <div class="wire-dot bg-orange-500" style="animation-delay:0s"></div>
+        <div class="wire-dot bg-orange-400" style="animation-delay:.7s"></div>
+        <div class="wire-dot bg-orange-300" style="animation-delay:1.4s"></div>
+      </div>
+      <div class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/30" style="animation:float 3s ease .5s infinite"><i data-lucide="landmark" class="w-5 h-5 text-purple-400"></i></div>
+      <div class="absolute left-1/2 -translate-x-1/2 -top-1 text-[9px] dark:text-neutral-500 text-neutral-400 tracking-wider">${cur.route||'Bank Network'}</div>
+    </div>
+    <h2 class="text-xl font-medium dark:text-white text-neutral-900 mb-1">${cur.n} Details</h2>
+    <p class="text-[11px] dark:text-neutral-400 text-neutral-500 mb-5">Enter your bank account information</p>
+    <div class="glass rounded-2xl p-5 max-w-md mx-auto space-y-3">
+      ${f.map(x=>`<div><label class="text-[10px] dark:text-neutral-400 text-neutral-500 mb-1 block flex items-center gap-1"><i data-lucide="${x.icon}" class="w-3 h-3"></i>${x.l}</label><input type="text" value="${x.v}" class="input-f w-full dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-2.5 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none font-mono"></div>`).join('')}
+      <button onclick="next()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 rounded-lg transition-colors text-sm">Verify Account</button>
+    </div>
+  </div>`;lucide.createIcons();
+}
+
+function bankS2(a){
+  a.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="relative h-24 mb-5 max-w-md mx-auto">
+      <div class="absolute left-4 top-1/2 -translate-y-1/2 text-left"><div class="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center mb-1"><i data-lucide="user" class="w-4 h-4 text-green-400"></i></div><div class="text-[9px] dark:text-neutral-500 text-neutral-400">Your Account</div></div>
+      <div class="absolute left-16 right-16 top-1/2 h-0.5 bg-green-500/50 -translate-y-1/2"></div>
+      <div class="absolute right-4 top-1/2 -translate-y-1/2 text-right"><div class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mb-1 ml-auto"><i data-lucide="building-2" class="w-4 h-4 text-orange-400"></i></div><div class="text-[9px] dark:text-neutral-500 text-neutral-400">PayNova Store</div></div>
+      <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center"><i data-lucide="check" class="w-4 h-4 text-white"></i></div>
+    </div>
+    <h2 class="text-xl font-medium dark:text-white text-neutral-900 mb-1">Confirm Transfer</h2>
+    <p class="text-[11px] dark:text-neutral-400 text-neutral-500 mb-5">Verify the ${cur.n} details</p>
+    <div class="glass rounded-2xl p-5 max-w-md mx-auto text-left space-y-2.5">
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Amount</span><span class="text-xl font-bold dark:text-white text-neutral-900">$299.00</span></div>
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Method</span><span class="text-sm dark:text-white text-neutral-900">${cur.n}</span></div>
+      <div class="flex justify-between py-2"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Estimated Arrival</span><span class="text-sm dark:text-white text-neutral-900">${cur.id==='faster'?'Minutes':'1-3 business days'}</span></div>
+      <button onclick="next()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-2">Initiate Transfer</button>
+    </div>
+  </div>`;lucide.createIcons();
+}
+
+/* ============================================================
+   CRYPTO FLOW — Blockchain Node Animation
+   ============================================================ */
+function cryptoS1(a){
+  a.innerHTML=`
+  <div class="fade-up text-center">
+    <!-- Blockchain Visual -->
+    <div class="flex items-center justify-center gap-0 mb-6 overflow-hidden">
+      <div class="chain-node bg-orange-500/10 border border-orange-500/30" style="animation:float 3s ease infinite"><i data-lucide="wallet" class="w-6 h-6 text-orange-400"></i></div>
+      <div class="chain-link"><div class="h-full"></div></div>
+      <div class="chain-node bg-cyan-500/10 border border-cyan-500/30" style="animation:float 3s ease .3s infinite"><i data-lucide="box" class="w-6 h-6 text-cyan-400"></i></div>
+      <div class="chain-link"><div class="h-full"></div></div>
+      <div class="chain-node bg-cyan-500/10 border border-cyan-500/30" style="animation:float 3s ease .6s infinite"><i data-lucide="box" class="w-6 h-6 text-cyan-400"></i></div>
+      <div class="chain-link"><div class="h-full"></div></div>
+      <div class="chain-node bg-purple-500/10 border border-purple-500/30" style="animation:float 3s ease .9s infinite"><i data-lucide="landmark" class="w-6 h-6 text-purple-400"></i></div>
+    </div>
+    <h2 class="text-xl font-medium dark:text-white text-neutral-900 mb-1">Send ${cur.coin}</h2>
+    <p class="text-[11px] dark:text-neutral-400 text-neutral-500 mb-5">Transfer to the wallet address below</p>
+    <div class="glass rounded-2xl p-5 max-w-md mx-auto space-y-3">
+      <div class="w-32 h-32 mx-auto bg-white rounded-xl p-2 relative">
+        <svg viewBox="0 0 100 100" class="w-full h-full"><rect x="5" y="5" width="25" height="25" rx="3" fill="#000"/><rect x="8" y="8" width="7" height="7" fill="#fff"/><rect x="10" y="10" width="3" height="3" fill="#000"/><rect x="70" y="5" width="25" height="25" rx="3" fill="#000"/><rect x="73" y="8" width="7" height="7" fill="#fff"/><rect x="75" y="10" width="3" height="3" fill="#000"/><rect x="5" y="70" width="25" height="25" rx="3" fill="#000"/><rect x="8" y="73" width="7" height="7" fill="#fff"/><rect x="10" y="75" width="3" height="3" fill="#000"/><rect x="35" y="5" width="5" height="5" fill="#000"/><rect x="45" y="15" width="5" height="5" fill="#000"/><rect x="35" y="35" width="5" height="5" fill="#000"/><rect x="55" y="40" width="5" height="5" fill="#000"/><rect x="70" y="70" width="25" height="25" rx="3" fill="#000"/><rect x="73" y="73" width="7" height="7" fill="#fff"/><rect x="75" y="75" width="3" height="3" fill="#000"/><rect x="55" y="55" width="5" height="5" fill="#000"/></svg>
+        <div class="absolute inset-0 h-0.5 bg-cyan-400/60" style="animation:scanLine 2s linear infinite"></div>
+      </div>
+      <div class="text-center"><div class="text-2xl font-bold dark:text-white text-neutral-900" style="color:${cur.coinColor}">${cur.id==='btc'?'0.00452':cur.id==='eth'?'0.124':cur.id==='usdt'?'299.00':cur.id==='usdc'?'299.00':'3.82'} ${cur.coin}</div><div class="text-[10px] dark:text-neutral-500 text-neutral-400">≈ $299.00 USD</div></div>
+      <div class="flex items-center gap-2"><input id="cAddr" type="text" value="${cur.coinAddr}" readonly class="input-f flex-1 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-3 py-2 text-[10px] dark:text-white text-neutral-900 font-mono outline-none">
+        <button onclick="navigator.clipboard?.writeText(document.getElementById('cAddr').value);toast('Copied!')" class="p-2 rounded-lg dark:bg-neutral-800 bg-neutral-100 border dark:border-neutral-700 border-neutral-200"><i data-lucide="copy" class="w-4 h-4 dark:text-neutral-400 text-neutral-500"></i></button></div>
+      <div class="dark:bg-neutral-800/30 bg-neutral-100 rounded-lg p-2.5 text-[10px] dark:text-neutral-400 text-neutral-500 space-y-1"><div class="flex justify-between"><span>Network Fee</span><span class="text-green-400">~$2.50</span></div><div class="flex justify-between"><span>Required Confirmations</span><span>3 blocks</span></div></div>
+      <button onclick="next()" class="w-full text-white font-medium py-2.5 rounded-lg transition-colors text-sm" style="background:${cur.coinColor}">I've Sent ${cur.coin}</button>
+    </div>
+  </div>`;lucide.createIcons();
+}
+
+function cryptoS2(a){
+  a.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="flex items-center justify-center gap-1 mb-6">
+      <div class="w-10 h-10 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center justify-center"><i data-lucide="check" class="w-4 h-4 text-green-400"></i></div>
+      <div class="w-8 h-0.5 bg-green-500/50"></div>
+      <div class="w-10 h-10 rounded-lg bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center animate-pulse"><i data-lucide="loader" class="w-4 h-4 text-yellow-400"></i></div>
+      <div class="w-8 h-0.5 dark:bg-neutral-800 bg-neutral-200"></div>
+      <div class="w-10 h-10 rounded-lg dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 flex items-center justify-center"><span class="text-xs dark:text-neutral-500 text-neutral-400">3</span></div>
+    </div>
+    <h2 class="text-xl font-medium dark:text-white text-neutral-900 mb-1">Confirming on Chain</h2>
+    <p class="text-[11px] dark:text-neutral-400 text-neutral-500 mb-5">1/3 confirmations received</p>
+    <div class="glass rounded-2xl p-5 max-w-md mx-auto text-left space-y-2.5">
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Amount</span><span class="text-xl font-bold dark:text-white text-neutral-900">$299.00</span></div>
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Coin</span><span class="text-sm dark:text-white text-neutral-900" style="color:${cur.coinColor}">${cur.coin}</span></div>
+      <div class="flex justify-between py-2"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Status</span><span class="text-sm text-yellow-400">Confirming...</span></div>
+      <button onclick="next()" class="w-full text-white font-medium py-2.5 rounded-lg transition-colors text-sm" style="background:${cur.coinColor}">Verify on Blockchain</button>
+    </div>
+  </div>`;lucide.createIcons();
+}
+
+/* ============================================================
+   BIOMETRIC FLOW — Phone Mockup with NFC Rings
+   ============================================================ */
+function bioS1(a){
+  a.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="flex justify-center mb-5">
+      <div class="phone-frame" style="border-color:${cur.deviceColor||'#333'}">
+        <div class="phone-notch"></div>
+        <div class="phone-screen flex flex-col items-center justify-center bg-gradient-to-b from-neutral-900 to-neutral-950">
+          <div class="text-[10px] text-white/40 mb-4">${cur.device||'Device'} Pay</div>
+          <div class="text-white text-lg font-semibold mb-1">$299.00</div>
+          <div class="text-[10px] text-white/40 mb-6">PayNova Store</div>
+          <div class="relative cursor-pointer" onclick="authFP(this)">
+            <div class="fp-ring w-24 h-24" style="border-color:${cur.accent||'#F97316'}40;animation-delay:0s"></div>
+            <div class="fp-ring w-24 h-24" style="border-color:${cur.accent||'#F97316'}40;animation-delay:.5s"></div>
+            <div class="fp-ring w-24 h-24" style="border-color:${cur.accent||'#F97316'}40;animation-delay:1s"></div>
+            <div class="absolute inset-0 w-24 h-24 flex items-center justify-center" id="fpIcon"><i data-lucide="fingerprint" class="w-10 h-10" style="color:${cur.accent||'#F97316'}"></i></div>
+          </div>
+          <div class="text-[9px] text-white/30 mt-4">Tap to authenticate</div>
+        </div>
+      </div>
+    </div>
+    <h2 class="text-xl font-medium dark:text-white text-neutral-900 mb-1">Authenticate with ${cur.n}</h2>
+    <p class="text-[11px] dark:text-neutral-400 text-neutral-500">Use biometrics on your ${cur.device}</p>
+  </div>`;lucide.createIcons();
+}
+
+function authFP(el){
+  const icon=document.getElementById('fpIcon');
+  icon.innerHTML='<i data-lucide="check" class="w-10 h-10 text-green-400"></i>';
+  document.querySelectorAll('.fp-ring').forEach(r=>r.style.borderColor='rgba(34,197,94,0.3)');
+  lucide.createIcons();toast('Authenticated!');
+  setTimeout(()=>next(),700);
+}
+
+/* ============================================================
+   BNPL FLOW — Colorful Installment Bars
+   ============================================================ */
+function bnplS1(a){
+  a.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="text-4xl mb-4" style="animation:float 2s ease infinite">${cur.n==='Klarna'?'🛍️':cur.n==='Afterpay'?'💚':cur.n==='Affirm'?'💙':cur.n==='Zip'?'💜':'🟣'}</div>
+    <h2 class="text-xl font-medium dark:text-white text-neutral-900 mb-1">${cur.n} — Split It</h2>
+    <p class="text-[11px] dark:text-neutral-400 text-neutral-500 mb-6">Choose your payment plan</p>
+    <div class="max-w-md mx-auto space-y-3">
+      <div onclick="selP(this)" class="plan-o glass rounded-xl p-4 cursor-pointer border-2 text-left" style="border-color:${cur.brandColor||'#EC4899'}">
+        <div class="flex justify-between items-center mb-2"><span class="text-sm font-medium dark:text-white text-neutral-900">Pay in 4</span><span class="text-[10px] px-2 py-0.5 rounded-full font-medium" style="background:${cur.brandColor||'#EC4899'}20;color:${cur.brandColor||'#EC4899'}">Popular</span></div>
+        <div class="text-2xl font-bold dark:text-white text-neutral-900">$74.75 <span class="text-xs font-normal dark:text-neutral-500 text-neutral-400">every 2 weeks</span></div>
+        <div class="text-[10px] dark:text-neutral-500 text-neutral-400 mt-1 mb-3">0% interest · No fees</div>
+        <div class="flex gap-2">
+          <div class="install-bar flex-[1] flex items-center justify-center text-[10px] font-medium text-white" style="background:${cur.brandColor||'#EC4899'}">$74.75</div>
+          <div class="install-bar flex-[1] flex items-center justify-center text-[10px] font-medium dark:text-neutral-400 text-neutral-500 dark:bg-neutral-800/50 bg-neutral-200" style="animation-delay:.5s">$74.75</div>
+          <div class="install-bar flex-[1] flex items-center justify-center text-[10px] font-medium dark:text-neutral-400 text-neutral-500 dark:bg-neutral-800/50 bg-neutral-200" style="animation-delay:1s">$74.75</div>
+          <div class="install-bar flex-[1] flex items-center justify-center text-[10px] font-medium dark:text-neutral-400 text-neutral-500 dark:bg-neutral-800/50 bg-neutral-200" style="animation-delay:1.5s">$74.75</div>
+        </div>
+      </div>
+      <div onclick="selP(this)" class="plan-o glass rounded-xl p-4 cursor-pointer border-2 border-transparent hover:border-opacity-30 text-left" style="hover:border-color:${cur.brandColor||'#EC4899'}">
+        <div class="text-sm font-medium dark:text-white text-neutral-900 mb-2">Pay in 6</div>
+        <div class="text-2xl font-bold dark:text-white text-neutral-900">$49.83 <span class="text-xs font-normal dark:text-neutral-500 text-neutral-400">/ month</span></div>
+        <div class="text-[10px] dark:text-neutral-500 text-neutral-400 mt-1">6 monthly · 0% APR</div>
+        <div class="flex gap-1 mt-3">${Array(6).fill(0).map((_,i)=>`<div class="flex-1 h-6 rounded ${i===0?'':'dark:bg-neutral-800/50 bg-neutral-200'}" ${i===0?`style="background:${cur.brandColor||'#EC4899'}"`:''}></div>`).join('')}</div>
+      </div>
+      <div onclick="selP(this)" class="plan-o glass rounded-xl p-4 cursor-pointer border-2 border-transparent text-left">
+        <div class="text-sm font-medium dark:text-white text-neutral-900 mb-2">Pay in 12</div>
+        <div class="text-2xl font-bold dark:text-white text-neutral-900">$24.92 <span class="text-xs font-normal dark:text-neutral-500 text-neutral-400">/ month</span></div>
+        <div class="text-[10px] dark:text-neutral-500 text-neutral-400 mt-1">12 monthly · 5.9% APR</div>
+        <div class="flex gap-0.5 mt-3">${Array(12).fill(0).map((_,i)=>`<div class="flex-1 h-4 rounded ${i===0?'':'dark:bg-neutral-800/50 bg-neutral-200'}" ${i===0?`style="background:${cur.brandColor||'#EC4899'}"`:''}></div>`).join('')}</div>
+      </div>
+      <button onclick="next()" class="w-full text-white font-medium py-2.5 rounded-lg transition-colors text-sm" style="background:${cur.brandColor||'#EC4899'}">Continue with Plan</button>
+    </div>
+  </div>`;lucide.createIcons();
+}
+
+function selP(el){document.querySelectorAll('.plan-o').forEach(o=>o.style.borderColor='transparent');el.style.borderColor=cur.brandColor||'#EC4899';toast('Plan selected')}
+
+function bnplS2(a){
+  a.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="text-3xl mb-3">📅</div>
+    <h2 class="text-xl font-medium dark:text-white text-neutral-900 mb-1">Payment Schedule</h2>
+    <p class="text-[11px] dark:text-neutral-400 text-neutral-500 mb-5">Your ${cur.n} installment timeline</p>
+    <div class="glass rounded-2xl p-5 max-w-md mx-auto text-left">
+      <div class="space-y-3">
+        <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold text-white" style="background:${cur.brandColor||'#EC4899'}">1st</div><div class="flex-1"><div class="text-sm dark:text-white text-neutral-900">Today</div><div class="text-[10px] dark:text-neutral-500 text-neutral-400">First installment</div></div><div class="text-sm font-semibold dark:text-white text-neutral-900">$74.75</div></div>
+        <div class="ml-5 w-0.5 h-4 dark:bg-neutral-700 bg-neutral-300"></div>
+        <div class="flex items-center gap-3 opacity-60"><div class="w-10 h-10 rounded-lg dark:bg-neutral-800 bg-neutral-200 flex items-center justify-center text-xs font-medium dark:text-neutral-400 text-neutral-500">2nd</div><div class="flex-1"><div class="text-sm dark:text-white text-neutral-900">In 2 weeks</div></div><div class="text-sm dark:text-neutral-400 text-neutral-500">$74.75</div></div>
+        <div class="ml-5 w-0.5 h-4 dark:bg-neutral-700 bg-neutral-300"></div>
+        <div class="flex items-center gap-3 opacity-40"><div class="w-10 h-10 rounded-lg dark:bg-neutral-800 bg-neutral-200 flex items-center justify-center text-xs font-medium dark:text-neutral-400 text-neutral-500">3rd</div><div class="flex-1"><div class="text-sm dark:text-white text-neutral-900">In 4 weeks</div></div><div class="text-sm dark:text-neutral-400 text-neutral-500">$74.75</div></div>
+        <div class="ml-5 w-0.5 h-4 dark:bg-neutral-700 bg-neutral-300"></div>
+        <div class="flex items-center gap-3 opacity-30"><div class="w-10 h-10 rounded-lg dark:bg-neutral-800 bg-neutral-200 flex items-center justify-center text-xs font-medium dark:text-neutral-400 text-neutral-500">4th</div><div class="flex-1"><div class="text-sm dark:text-white text-neutral-900">In 6 weeks</div></div><div class="text-sm dark:text-neutral-400 text-neutral-500">$74.75</div></div>
+      </div>
+      <div class="flex justify-between mt-4 pt-3 border-t dark:border-neutral-800 border-neutral-200"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Total</span><span class="text-lg font-bold dark:text-white text-neutral-900">$299.00</span></div>
+      <button onclick="next()" class="w-full text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-4" style="background:${cur.brandColor||'#EC4899'}">Agree & Pay First Installment</button>
+    </div>
+  </div>`;lucide.createIcons();
+}
+
+/* ============================================================
+   QR FLOW — Phone Scanning with Radar Pulse
+   ============================================================ */
+function qrS1(a){
+  a.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="relative inline-block mb-5">
+      <div class="relative w-48 h-48 mx-auto">
+        <!-- Radar rings -->
+        <div class="radar-ring w-48 h-48 left-0 top-0" style="border-color:${cur.appColor||'#22C55E'}60"></div>
+        <div class="radar-ring w-48 h-48 left-0 top-0" style="border-color:${cur.appColor||'#22C55E'}40;animation-delay:.7s"></div>
+        <div class="radar-ring w-48 h-48 left-0 top-0" style="border-color:${cur.appColor||'#22C55E'}20;animation-delay:1.4s"></div>
+        <!-- QR Code -->
+        <div class="absolute inset-4 bg-white rounded-xl p-2 z-10">
+          <svg viewBox="0 0 100 100" class="w-full h-full"><rect x="5" y="5" width="25" height="25" rx="3" fill="#000"/><rect x="8" y="8" width="7" height="7" fill="#fff"/><rect x="10" y="10" width="3" height="3" fill="#000"/><rect x="70" y="5" width="25" height="25" rx="3" fill="#000"/><rect x="73" y="8" width="7" height="7" fill="#fff"/><rect x="75" y="10" width="3" height="3" fill="#000"/><rect x="5" y="70" width="25" height="25" rx="3" fill="#000"/><rect x="8" y="73" width="7" height="7" fill="#fff"/><rect x="10" y="75" width="3" height="3" fill="#000"/><rect x="40" y="10" width="5" height="5" fill="#000"/><rect x="50" y="20" width="5" height="5" fill="#000"/><rect x="35" y="40" width="5" height="5" fill="#000"/><rect x="55" y="45" width="5" height="5" fill="#000"/><rect x="70" y="70" width="25" height="25" rx="3" fill="#000"/><rect x="73" y="73" width="7" height="7" fill="#fff"/><rect x="75" y="75" width="3" height="3" fill="#000"/></svg>
+        </div>
+      </div>
+    </div>
+    <h2 class="text-xl font-medium dark:text-white text-neutral-900 mb-1">Scan with ${cur.n}</h2>
+    <p class="text-[11px] dark:text-neutral-400 text-neutral-500 mb-5">Open ${cur.n} and scan this code</p>
+    <div class="glass rounded-2xl p-4 max-w-sm mx-auto text-center">
+      <div class="text-2xl font-bold dark:text-white text-neutral-900 mb-1">$299.00</div>
+      <div class="text-[10px] dark:text-neutral-500 text-neutral-400 mb-3 animate-pulse">Waiting for scan...</div>
+      <div class="flex justify-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:${cur.appColor||'#22C55E'}20"><i data-lucide="smartphone" class="w-4 h-4" style="color:${cur.appColor||'#22C55E'}"></i></div>
+        <div class="w-8 h-8 rounded-lg dark:bg-neutral-800 bg-neutral-200 flex items-center justify-center"><i data-lucide="camera" class="w-4 h-4 dark:text-neutral-400 text-neutral-500"></i></div>
+        <div class="w-8 h-8 rounded-lg dark:bg-neutral-800 bg-neutral-200 flex items-center justify-center"><i data-lucide="image" class="w-4 h-4 dark:text-neutral-400 text-neutral-500"></i></div>
+      </div>
+    </div>
+  </div>`;lucide.createIcons();
+}
+
+function qrS2(a){
+  a.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background:${cur.appColor||'#22C55E'}20;animation:glow 2s ease infinite"><i data-lucide="check-circle" class="w-8 h-8" style="color:${cur.appColor||'#22C55E'}"></i></div>
+    <h2 class="text-xl font-medium dark:text-white text-neutral-900 mb-1">QR Scanned!</h2>
+    <p class="text-[11px] dark:text-neutral-400 text-neutral-500 mb-5">Confirm in your ${cur.n} app</p>
+    <div class="glass rounded-2xl p-5 max-w-md mx-auto text-left space-y-2.5">
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Amount</span><span class="text-xl font-bold dark:text-white text-neutral-900">$299.00</span></div>
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">App</span><span class="text-sm font-medium" style="color:${cur.appColor||'#22C55E'}">${cur.n}</span></div>
+      <div class="flex justify-between py-2"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Status</span><span class="text-sm text-yellow-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse"></span>Tap to confirm</span></div>
+      <button onclick="next()" class="w-full text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-2" style="background:${cur.appColor||'#22C55E'}">Approve Payment</button>
+    </div>
+  </div>`;lucide.createIcons();
+}
+
+/* ============================================================
+   REDIRECT FLOW — Browser Mockup with Loading
+   ============================================================ */
+function redirS1(a){
+  a.innerHTML=`
+  <div class="fade-up text-center">
+    <!-- Browser Mockup -->
+    <div class="glass rounded-2xl overflow-hidden max-w-md mx-auto mb-5">
+      <div class="flex items-center gap-2 px-3 py-2 border-b dark:border-neutral-800 border-neutral-200 dark:bg-neutral-900/50 bg-neutral-50">
+        <div class="flex gap-1.5"><div class="w-2.5 h-2.5 rounded-full bg-red-500"></div><div class="w-2.5 h-2.5 rounded-full bg-yellow-500"></div><div class="w-2.5 h-2.5 rounded-full bg-green-500"></div></div>
+        <div class="flex-1 dark:bg-neutral-800 bg-neutral-200 rounded px-2 py-1 text-[10px] dark:text-neutral-400 text-neutral-500 font-mono text-center">pay.${cur.id}.com</div>
+        <div class="text-sm">${cur.flag||'🌐'}</div>
+      </div>
+      <div class="p-6 flex flex-col items-center">
+        <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-3" style="background:${cur.id==='ideal'?'#FF4F00':cur.id==='sofort'?'#FF8000':'#006FCF'}20"><i data-lucide="${cur.icon}" class="w-7 h-7 text-orange-400"></i></div>
+        <div class="text-sm font-medium dark:text-white text-neutral-900 mb-1">${cur.bankName||'Bank'}</div>
+        <div class="text-[10px] dark:text-neutral-500 text-neutral-400 mb-4">Secure payment page</div>
+        <div class="w-full dark:bg-neutral-800/50 bg-neutral-100 rounded-lg p-3 space-y-2 text-left">
+          <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">Merchant</span><span class="dark:text-white text-neutral-900">PayNova Store</span></div>
+          <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">Amount</span><span class="dark:text-white text-neutral-900 font-semibold">$299.00</span></div>
+        </div>
+        <button onclick="next()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-4">Redirect to ${cur.n} <i data-lucide="external-link" class="w-4 h-4 inline"></i></button>
+      </div>
+    </div>
+  </div>`;lucide.createIcons();
+}
+
+function redirS2(a){
+  a.innerHTML=`
+  <div class="fade-up text-center">
+    <!-- Mini bank page -->
+    <div class="glass rounded-2xl overflow-hidden max-w-md mx-auto">
+      <div class="p-4 flex items-center gap-3 border-b dark:border-neutral-800 border-neutral-200" style="background:${cur.id==='ideal'?'#FF4F00':cur.id==='sofort'?'#FF8000':'#006FCF'}10">
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:${cur.id==='ideal'?'#FF4F00':cur.id==='sofort'?'#FF8000':'#006FCF'}20"><i data-lucide="${cur.icon}" class="w-5 h-5 text-orange-400"></i></div>
+        <div><div class="text-sm font-medium dark:text-white text-neutral-900">${cur.bankName}</div><div class="text-[10px] dark:text-neutral-500 text-neutral-400">${cur.flag||''} ${cur.n} Secure</div></div>
+      </div>
+      <div class="p-5 space-y-3 text-left">
+        <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Amount</span><span class="text-xl font-bold dark:text-white text-neutral-900">$299.00</span></div>
+        <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Provider</span><span class="text-sm dark:text-white text-neutral-900">${cur.n}</span></div>
+        <div class="flex justify-between py-2"><span class="text-[11px] dark:text-neutral-500 text-neutral-400">Session</span><span class="text-sm text-green-400 flex items-center gap-1"><i data-lucide="lock" class="w-3 h-3"></i>Authenticated</span></div>
+        <button onclick="next()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-2">Confirm & Pay $299.00</button>
+      </div>
+    </div>
+  </div>`;lucide.createIcons();
+}
+
+/* ============================================================
+   PROCESSING — Method-Themed
+   ============================================================ */
+function procS(a){
+  const col=cur.flow==='card'?'#A855F7':cur.flow==='crypto'?cur.coinColor:cur.flow==='bnpl'?cur.brandColor:cur.flow==='qr'?cur.appColor:'#F97316';
+  a.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="spinner mx-auto mb-5" style="border-top-color:${col}"></div>
+    <h2 class="text-xl font-medium dark:text-white text-neutral-900 mb-1">Processing</h2>
+    <p class="text-[11px] dark:text-neutral-400 text-neutral-500 mb-6">Completing your ${cur.n} payment...</p>
+    <div class="max-w-sm mx-auto space-y-2">
+      <div class="flex items-center gap-3 slide-in" style="animation-delay:.1s"><div class="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center"><i data-lucide="check" class="w-3 h-3 text-green-400"></i></div><span class="text-xs dark:text-neutral-300 text-neutral-600">Payment initiated</span></div>
+      <div class="flex items-center gap-3 slide-in" style="animation-delay:.5s"><div class="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center"><i data-lucide="check" class="w-3 h-3 text-green-400"></i></div><span class="text-xs dark:text-neutral-300 text-neutral-600">Details verified</span></div>
+      <div class="flex items-center gap-3" id="pS3"><div class="spinner" style="width:20px;height:20px;border-width:2px;border-top-color:${col}"></div><span class="text-xs dark:text-neutral-400 text-neutral-500">Authorizing via ${cur.n}...</span></div>
+      <div class="flex items-center gap-3 opacity-20" id="pS4"><div class="w-5 h-5 rounded-full dark:bg-neutral-800 bg-neutral-200 flex items-center justify-center text-[9px]">4</div><span class="text-xs dark:text-neutral-500 text-neutral-400">Finalizing</span></div>
+    </div>
+    <div class="max-w-sm mx-auto mt-5 h-1 dark:bg-neutral-800 bg-neutral-200 rounded-full overflow-hidden"><div class="h-1 rounded-full" style="background:${col};width:0;animation:progressBar 2.5s ease forwards"></div></div>
+  </div>`;
+  lucide.createIcons();
+  setTimeout(()=>{const s=document.getElementById('pS3');if(s)s.innerHTML='<div class="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center"><i data-lucide="check" class="w-3 h-3 text-green-400"></i></div><span class="text-xs dark:text-neutral-300 text-neutral-600">Authorized</span>';lucide.createIcons()},1200);
+  setTimeout(()=>{const s=document.getElementById('pS4');if(s){s.classList.remove('opacity-20');s.innerHTML='<div class="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center"><i data-lucide="check" class="w-3 h-3 text-green-400"></i></div><span class="text-xs dark:text-neutral-300 text-neutral-600">Complete</span>';lucide.createIcons()}},2000);
+  setTimeout(()=>next(),2500);
+}
+
+/* ============================================================
+   RECEIPT — Celebration with Method Branding
+   ============================================================ */
+function receiptS(a){
+  const tx='TXN-'+Math.random().toString(36).substring(2,10).toUpperCase();
+  const now=new Date();
+  const col=cur.flow==='card'?'#A855F7':cur.flow==='crypto'?cur.coinColor:cur.flow==='bnpl'?cur.brandColor:cur.flow==='qr'?cur.appColor:'#F97316';
+  a.innerHTML=`
+  <div class="bounce-in text-center relative" id="rArea">
+    <div id="cBox" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+    <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 success-check" style="background:${col}15">
+      <svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="19" fill="none" stroke="${col}" stroke-width="2" opacity="0.3"/><path d="M13 22 L19 28 L31 16" fill="none" stroke="${col}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h2 class="text-xl font-medium dark:text-white text-neutral-900 mb-0.5">Payment Successful! 🎉</h2>
+    <p class="text-[11px] dark:text-neutral-400 text-neutral-500 mb-5">via ${cur.n}</p>
+    <div class="glass rounded-2xl overflow-hidden max-w-md mx-auto text-left">
+      <div class="p-4 text-center border-b dark:border-neutral-800 border-neutral-200" style="background:${col}08">
+        <div class="text-[10px] font-medium tracking-wider mb-0.5" style="color:${col}">AMOUNT PAID</div>
+        <div class="text-3xl font-bold dark:text-white text-neutral-900">$299.00</div>
+      </div>
+      <div class="p-4 space-y-1.5">
+        <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">Transaction ID</span><span class="dark:text-white text-neutral-900 font-mono text-[10px]">${tx}</span></div>
+        <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">Date</span><span class="dark:text-white text-neutral-900">${now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</span></div>
+        <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">Time</span><span class="dark:text-white text-neutral-900">${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</span></div>
+        <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">Method</span><span class="dark:text-white text-neutral-900">${cur.n}</span></div>
+        <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">Status</span><span class="font-medium flex items-center gap-1" style="color:${col}"><i data-lucide="check-circle" class="w-3 h-3"></i>Confirmed</span></div>
+        <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">Merchant</span><span class="dark:text-white text-neutral-900">PayNova Store</span></div>
+        <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">Currency</span><span class="dark:text-white text-neutral-900">USD</span></div>
+        <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">Fee</span><span class="text-green-400">$0.00</span></div>
+        <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">Net</span><span class="dark:text-white text-neutral-900 font-semibold">$299.00</span></div>
+      </div>
+      <div class="px-4"><div class="border-t-2 border-dashed dark:border-neutral-700 border-neutral-300"></div></div>
+      <div class="p-4 flex gap-2">
+        <button onclick="toast('PDF downloaded!')" class="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg border dark:border-neutral-700 border-neutral-200 dark:text-neutral-300 text-neutral-600 text-xs dark:hover:bg-neutral-800 hover:bg-neutral-100 transition-colors"><i data-lucide="download" class="w-3.5 h-3.5"></i>PDF</button>
+        <button onclick="toast('Receipt emailed!')" class="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg border dark:border-neutral-700 border-neutral-200 dark:text-neutral-300 text-neutral-600 text-xs dark:hover:bg-neutral-800 hover:bg-neutral-100 transition-colors"><i data-lucide="mail" class="w-3.5 h-3.5"></i>Email</button>
+        <button onclick="toast('Link copied!')" class="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg border dark:border-neutral-700 border-neutral-200 dark:text-neutral-300 text-neutral-600 text-xs dark:hover:bg-neutral-800 hover:bg-neutral-100 transition-colors"><i data-lucide="link" class="w-3.5 h-3.5"></i>Share</button>
+      </div>
+    </div>
+    <div class="mt-6 flex gap-3 justify-center">
+      <button onclick="startFlow(cur.id)" class="text-xs dark:text-neutral-400 text-neutral-500 hover:text-orange-400 transition-colors flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3"></i>Retry</button>
+      <button onclick="showView('home')" class="text-xs bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-1"><i data-lucide="home" class="w-3 h-3"></i>All Methods</button>
+    </div>
+  </div>`;
+  lucide.createIcons();setTimeout(bang,200);
+}
+
+function bang(){
+  const c=document.getElementById('cBox');if(!c)return;
+  const cols=['#F97316','#22C55E','#3B82F6','#EAB308','#EC4899','#8B5CF6','#06B6D4','#EF4444'];
+  for(let i=0;i<50;i++){const p=document.createElement('div');p.className='confetti-p';p.style.left=Math.random()*100+'%';p.style.top='-10px';p.style.background=cols[Math.floor(Math.random()*cols.length)];p.style.animationDelay=Math.random()*.6+'s';p.style.animationDuration=(1+Math.random())+'s';p.style.width=(4+Math.random()*8)+'px';p.style.height=(4+Math.random()*8)+'px';p.style.borderRadius=Math.random()>.5?'50%':'2px';c.appendChild(p)}
+}
+
+// SETTINGS
+function renderSets(){
+  const c=document.getElementById('settingsContent');let h='';
+  SETS.forEach((cat,ci)=>{
+    h+=`<div class="mb-8" style="animation:fadeInUp .4s ease ${ci*.1}s both">
+      <div class="flex items-center gap-2 mb-4"><div class="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center"><i data-lucide="settings" class="w-4 h-4 text-orange-400"></i></div><h3 class="text-sm font-medium dark:text-white text-neutral-900">${cat.cat}</h3><span class="text-[10px] px-1.5 py-0.5 rounded-full dark:bg-neutral-800 bg-neutral-100 dark:text-neutral-400 text-neutral-500">${cat.items.length}</span></div>
+      <div class="glass rounded-2xl overflow-hidden">`;
+    cat.items.forEach((s,si)=>{
+      h+=`<div class="flex items-center justify-between p-4 ${si<cat.items.length-1?'border-b dark:border-neutral-800 border-neutral-200':''} dark:hover:bg-white/[0.02] hover:bg-black/[0.01] transition-colors">
+        <div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-${s.c}-500/10 flex items-center justify-center flex-shrink-0"><i data-lucide="${s.i}" class="w-4 h-4 text-${s.c}-400"></i></div><div><div class="text-sm font-medium dark:text-white text-neutral-900">${s.n}</div><div class="text-[10px] dark:text-neutral-500 text-neutral-400">${s.d}</div></div></div>
+        <label class="toggle-switch"><input type="checkbox" ${s.on?'checked':''} onchange="toast('${s.n} '+(this.checked?'enabled':'disabled'))"><span class="toggle-slider"></span></label>
+      </div>`;
+    });
+    h+=`</div></div>`;
+  });
+  c.innerHTML=h;lucide.createIcons();
+}
+
+renderHome();
+</script>
+</body>
+</html>
