@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayNova — Payment Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; }
+    .dark body { background:#0a0a0a; color:#fff; }
+
+    /* Card 3D */
+    .card-3d {
+      perspective: 1000px;
+      width: 340px; height: 210px;
+    }
+    .card-inner {
+      position:relative; width:100%; height:100%;
+      transition: transform 0.6s cubic-bezier(.4,0,.2,1);
+      transform-style: preserve-3d;
+    }
+    .card-inner.flipped { transform: rotateY(180deg); }
+    .card-front, .card-back {
+      position:absolute; inset:0; backface-visibility:hidden;
+      border-radius:16px; padding:24px;
+      overflow:hidden;
+    }
+    .card-front {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      border:1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    .card-back {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      border:1px solid rgba(255,255,255,0.1);
+      transform: rotateY(180deg);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .card-chip {
+      width:45px; height:34px; border-radius:6px;
+      background: linear-gradient(135deg, #d4af37, #f0d060, #d4af37);
+      position:relative;
+    }
+    .card-chip::after {
+      content:''; position:absolute; inset:4px; border:1px solid rgba(0,0,0,0.2);
+      border-radius:3px;
+    }
+    .magnetic-strip { height:44px; background:#000; margin:0 -24px; margin-top:20px; }
+
+    /* Animations */
+    @keyframes fadeInUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeInDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    @keyframes scaleIn { from{opacity:0;transform:scale(0.8)} to{opacity:1;transform:scale(1)} }
+    @keyframes slideRight { from{opacity:0;transform:translateX(-40px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    @keyframes checkDraw {
+      0%{stroke-dashoffset:100} 100%{stroke-dashoffset:0}
+    }
+    @keyframes confetti {
+      0%{opacity:1;transform:translateY(0) rotate(0deg)}
+      100%{opacity:0;transform:translateY(200px) rotate(720deg)}
+    }
+    @keyframes shimmer {
+      0%{background-position:-200% 0}
+      100%{background-position:200% 0}
+    }
+    @keyframes progressBar {
+      0%{width:0} 100%{width:100%}
+    }
+    @keyframes bounceIn {
+      0%{opacity:0;transform:scale(0.3)}
+      50%{transform:scale(1.05)}
+      70%{transform:scale(0.9)}
+      100%{opacity:1;transform:scale(1)}
+    }
+    @keyframes typewriter {
+      from{width:0} to{width:100%}
+    }
+    .fade-up { animation: fadeInUp 0.5s ease forwards; }
+    .fade-down { animation: fadeInDown 0.4s ease forwards; }
+    .scale-in { animation: scaleIn 0.4s ease forwards; }
+    .slide-right { animation: slideRight 0.4s ease forwards; }
+    .bounce-in { animation: bounceIn 0.6s ease forwards; }
+
+    .processing-spinner {
+      width:48px; height:48px; border:3px solid rgba(249,115,22,0.2);
+      border-top-color:#F97316; border-radius:50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .step-line { transition: all 0.5s ease; }
+    .step-circle { transition: all 0.3s ease; }
+
+    .payment-method-card {
+      transition: all 0.3s cubic-bezier(.4,0,.2,1);
+      cursor:pointer;
+    }
+    .payment-method-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(249,115,22,0.15);
+    }
+    .dark .payment-method-card:hover { box-shadow: 0 12px 40px rgba(249,115,22,0.1); }
+
+    .receipt-line {
+      background: repeating-linear-gradient(transparent,transparent 11px,#333 12px);
+      background-size: 100% 12px;
+    }
+
+    .confetti-piece {
+      position:absolute; width:8px; height:8px; border-radius:2px;
+      animation: confetti 1.5s ease forwards;
+    }
+
+    .input-card {
+      transition: all 0.2s;
+    }
+    .input-card:focus {
+      border-color: #F97316;
+      box-shadow: 0 0 0 3px rgba(249,115,22,0.1);
+    }
+
+    .glass-panel {
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .dark .glass-panel { background:rgba(255,255,255,0.03); border-color:rgba(255,255,255,0.08); }
+    html:not(.dark) .glass-panel { background:rgba(255,255,255,0.7); border-color:rgba(0,0,0,0.08); }
+
+    .success-check svg { stroke-dasharray:100; stroke-dashoffset:100; animation: checkDraw 0.6s ease 0.2s forwards; }
+
+    .shimmer-bg {
+      background: linear-gradient(90deg, transparent, rgba(249,115,22,0.1), transparent);
+      background-size: 200% 100%;
+      animation: shimmer 2s infinite;
+    }
+
+    ::-webkit-scrollbar{width:6px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:#525252;border-radius:3px}
+
+    .toggle-switch{position:relative;width:44px;height:24px}
+    .toggle-switch input{opacity:0;width:0;height:0}
+    .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#525252;border-radius:24px;transition:.3s}
+    .toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s}
+    .toggle-switch input:checked+.toggle-slider{background:#F97316}
+    .toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px)}
+
+    .toast{position:fixed;bottom:24px;right:24px;z-index:9999;padding:12px 20px;border-radius:8px;font-size:14px;transform:translateY(100px);opacity:0;transition:all .3s}
+    .toast.show{transform:translateY(0);opacity:1}
+    .dark .toast{background:#F97316;color:white}
+    html:not(.dark) .toast{background:#EA580C;color:white}
+  </style>
+</head>
+<body class="bg-neutral-950 text-white dark:bg-neutral-950 dark:text-white min-h-screen transition-colors duration-300">
+
+<div id="toast" class="toast"></div>
+
+<!-- NAV -->
+<nav class="fixed top-0 left-0 right-0 h-16 z-50 flex items-center px-4 md:px-6 border-b dark:border-neutral-800 border-neutral-200 dark:bg-neutral-950/80 bg-white/80 backdrop-blur-md transition-colors">
+  <div class="max-w-7xl mx-auto w-full flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center"><i data-lucide="zap" class="w-5 h-5 text-white"></i></div>
+      <span class="text-lg font-semibold dark:text-white text-neutral-900">PayNova</span>
+      <span class="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 font-medium ml-1">DEMO</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="toggleTheme()" class="w-9 h-9 rounded-lg flex items-center justify-center dark:hover:bg-neutral-800 hover:bg-neutral-100 transition-colors">
+        <i data-lucide="moon" class="w-4 h-4 dark:text-neutral-400 text-neutral-600"></i>
+      </button>
+      <button onclick="goHome()" class="text-sm dark:text-neutral-400 text-neutral-500 hover:text-orange-500 transition-colors flex items-center gap-1">
+        <i data-lucide="home" class="w-4 h-4"></i> Home
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN CONTAINER -->
+<main class="pt-24 pb-12 px-4">
+  <div class="max-w-6xl mx-auto">
+
+    <!-- ============ HOME VIEW ============ -->
+    <div id="homeView">
+      <div class="text-center mb-12">
+        <h1 class="text-3xl md:text-5xl font-medium tracking-tight dark:text-white text-neutral-900 mb-4">
+          Choose your <span class="text-orange-500">payment method</span>
+        </h1>
+        <p class="dark:text-neutral-400 text-neutral-500 max-w-lg mx-auto">Click any payment method below to see a full animated step-by-step demo of the checkout experience.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+        <!-- Card -->
+        <div onclick="startPayment('card')" class="payment-method-card glass-panel rounded-2xl p-6 group">
+          <div class="w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center mb-4 group-hover:bg-blue-500/20 transition-colors">
+            <i data-lucide="credit-card" class="w-7 h-7 text-blue-400"></i>
+          </div>
+          <h3 class="font-medium dark:text-white text-neutral-900 mb-1">Card Payment</h3>
+          <p class="text-xs dark:text-neutral-500 text-neutral-400">Visa, Mastercard, Amex — animated card demo</p>
+          <div class="mt-3 flex items-center gap-1 text-xs text-orange-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+            Try demo <i data-lucide="arrow-right" class="w-3 h-3"></i>
+          </div>
+        </div>
+        <!-- UPI -->
+        <div onclick="startPayment('upi')" class="payment-method-card glass-panel rounded-2xl p-6 group">
+          <div class="w-14 h-14 rounded-xl bg-green-500/10 flex items-center justify-center mb-4 group-hover:bg-green-500/20 transition-colors">
+            <i data-lucide="smartphone" class="w-7 h-7 text-green-400"></i>
+          </div>
+          <h3 class="font-medium dark:text-white text-neutral-900 mb-1">UPI</h3>
+          <p class="text-xs dark:text-neutral-500 text-neutral-400">Instant bank transfer via UPI ID</p>
+          <div class="mt-3 flex items-center gap-1 text-xs text-orange-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+            Try demo <i data-lucide="arrow-right" class="w-3 h-3"></i>
+          </div>
+        </div>
+        <!-- PayPal -->
+        <div onclick="startPayment('paypal')" class="payment-method-card glass-panel rounded-2xl p-6 group">
+          <div class="w-14 h-14 rounded-xl bg-blue-600/10 flex items-center justify-center mb-4 group-hover:bg-blue-600/20 transition-colors">
+            <i data-lucide="wallet" class="w-7 h-7 text-blue-500"></i>
+          </div>
+          <h3 class="font-medium dark:text-white text-neutral-900 mb-1">PayPal</h3>
+          <p class="text-xs dark:text-neutral-500 text-neutral-400">Pay with your PayPal account</p>
+          <div class="mt-3 flex items-center gap-1 text-xs text-orange-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+            Try demo <i data-lucide="arrow-right" class="w-3 h-3"></i>
+          </div>
+        </div>
+        <!-- Bank Transfer -->
+        <div onclick="startPayment('bank')" class="payment-method-card glass-panel rounded-2xl p-6 group">
+          <div class="w-14 h-14 rounded-xl bg-purple-500/10 flex items-center justify-center mb-4 group-hover:bg-purple-500/20 transition-colors">
+            <i data-lucide="landmark" class="w-7 h-7 text-purple-400"></i>
+          </div>
+          <h3 class="font-medium dark:text-white text-neutral-900 mb-1">Bank Transfer</h3>
+          <p class="text-xs dark:text-neutral-500 text-neutral-400">Direct wire / ACH / SEPA transfer</p>
+          <div class="mt-3 flex items-center gap-1 text-xs text-orange-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+            Try demo <i data-lucide="arrow-right" class="w-3 h-3"></i>
+          </div>
+        </div>
+        <!-- Crypto -->
+        <div onclick="startPayment('crypto')" class="payment-method-card glass-panel rounded-2xl p-6 group">
+          <div class="w-14 h-14 rounded-xl bg-cyan-500/10 flex items-center justify-center mb-4 group-hover:bg-cyan-500/20 transition-colors">
+            <i data-lucide="bitcoin" class="w-7 h-7 text-cyan-400"></i>
+          </div>
+          <h3 class="font-medium dark:text-white text-neutral-900 mb-1">Crypto</h3>
+          <p class="text-xs dark:text-neutral-500 text-neutral-400">BTC, ETH, USDT wallet payment</p>
+          <div class="mt-3 flex items-center gap-1 text-xs text-orange-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+            Try demo <i data-lucide="arrow-right" class="w-3 h-3"></i>
+          </div>
+        </div>
+        <!-- Apple/Google Pay -->
+        <div onclick="startPayment('mobilepay')" class="payment-method-card glass-panel rounded-2xl p-6 group">
+          <div class="w-14 h-14 rounded-xl bg-orange-500/10 flex items-center justify-center mb-4 group-hover:bg-orange-500/20 transition-colors">
+            <i data-lucide="nfc" class="w-7 h-7 text-orange-400"></i>
+          </div>
+          <h3 class="font-medium dark:text-white text-neutral-900 mb-1">Mobile Pay</h3>
+          <p class="text-xs dark:text-neutral-500 text-neutral-400">Apple Pay, Google Pay — one tap</p>
+          <div class="mt-3 flex items-center gap-1 text-xs text-orange-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+            Try demo <i data-lucide="arrow-right" class="w-3 h-3"></i>
+          </div>
+        </div>
+        <!-- BNPL -->
+        <div onclick="startPayment('bnpl')" class="payment-method-card glass-panel rounded-2xl p-6 group">
+          <div class="w-14 h-14 rounded-xl bg-pink-500/10 flex items-center justify-center mb-4 group-hover:bg-pink-500/20 transition-colors">
+            <i data-lucide="calendar-check" class="w-7 h-7 text-pink-400"></i>
+          </div>
+          <h3 class="font-medium dark:text-white text-neutral-900 mb-1">Buy Now Pay Later</h3>
+          <p class="text-xs dark:text-neutral-500 text-neutral-400">Klarna, Afterpay — split payments</p>
+          <div class="mt-3 flex items-center gap-1 text-xs text-orange-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+            Try demo <i data-lucide="arrow-right" class="w-3 h-3"></i>
+          </div>
+        </div>
+        <!-- Payment Link -->
+        <div onclick="startPayment('link')" class="payment-method-card glass-panel rounded-2xl p-6 group">
+          <div class="w-14 h-14 rounded-xl bg-yellow-500/10 flex items-center justify-center mb-4 group-hover:bg-yellow-500/20 transition-colors">
+            <i data-lucide="link" class="w-7 h-7 text-yellow-400"></i>
+          </div>
+          <h3 class="font-medium dark:text-white text-neutral-900 mb-1">Payment Link</h3>
+          <p class="text-xs dark:text-neutral-500 text-neutral-400">Generate & share a payment link</p>
+          <div class="mt-3 flex items-center gap-1 text-xs text-orange-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+            Try demo <i data-lucide="arrow-right" class="w-3 h-3"></i>
+          </div>
+        </div>
+        <!-- Invoice -->
+        <div onclick="startPayment('invoice')" class="payment-method-card glass-panel rounded-2xl p-6 group">
+          <div class="w-14 h-14 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4 group-hover:bg-emerald-500/20 transition-colors">
+            <i data-lucide="file-text" class="w-7 h-7 text-emerald-400"></i>
+          </div>
+          <h3 class="font-medium dark:text-white text-neutral-900 mb-1">Invoice</h3>
+          <p class="text-xs dark:text-neutral-500 text-neutral-400">Create & send a payment invoice</p>
+          <div class="mt-3 flex items-center gap-1 text-xs text-orange-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+            Try demo <i data-lucide="arrow-right" class="w-3 h-3"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PAYMENT VIEW ============ -->
+    <div id="paymentView" class="hidden">
+      <!-- Back button -->
+      <button onclick="goHome()" class="flex items-center gap-2 text-sm dark:text-neutral-400 text-neutral-500 hover:text-orange-500 transition-colors mb-8">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to methods
+      </button>
+
+      <!-- Step Indicator -->
+      <div id="stepIndicator" class="flex items-center justify-center gap-0 mb-12 max-w-lg mx-auto"></div>
+
+      <!-- Payment Content Area -->
+      <div id="paymentContent" class="max-w-2xl mx-auto"></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+lucide.createIcons();
+
+let currentMethod = '';
+let currentStep = 0;
+let totalSteps = 0;
+
+const methodConfig = {
+  card:     { name:'Card Payment',  icon:'credit-card',   color:'blue',   steps:4, stepNames:['Card Details','Confirm','Processing','Receipt'] },
+  upi:      { name:'UPI',           icon:'smartphone',     color:'green',  steps:4, stepNames:['Enter UPI ID','Confirm','Processing','Receipt'] },
+  paypal:   { name:'PayPal',        icon:'wallet',         color:'blue',   steps:4, stepNames:['Login','Confirm','Processing','Receipt'] },
+  bank:     { name:'Bank Transfer', icon:'landmark',       color:'purple', steps:4, stepNames:['Bank Details','Confirm','Processing','Receipt'] },
+  crypto:   { name:'Crypto',        icon:'bitcoin',        color:'cyan',   steps:4, stepNames:['Wallet Address','Confirm','Processing','Receipt'] },
+  mobilepay:{ name:'Mobile Pay',    icon:'nfc',            color:'orange', steps:3, stepNames:['Authenticate','Processing','Receipt'] },
+  bnpl:     { name:'Buy Now Pay Later', icon:'calendar-check', color:'pink', steps:4, stepNames:['Select Plan','Confirm','Processing','Receipt'] },
+  link:     { name:'Payment Link',  icon:'link',           color:'yellow', steps:3, stepNames:['Generate Link','Share','Receipt'] },
+  invoice:  { name:'Invoice',       icon:'file-text',      color:'emerald',steps:4, stepNames:['Invoice Details','Send','Processing','Receipt'] },
+};
+
+function showToast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function toggleTheme() {
+  const h=document.documentElement, b=document.body, isD=h.classList.contains('dark');
+  if(isD){h.classList.remove('dark');b.classList.remove('bg-neutral-950','text-white');b.classList.add('bg-white','text-neutral-900');}
+  else{h.classList.add('dark');b.classList.remove('bg-white','text-neutral-900');b.classList.add('bg-neutral-950','text-white');}
+  lucide.createIcons();
+}
+
+function goHome() {
+  document.getElementById('homeView').classList.remove('hidden');
+  document.getElementById('paymentView').classList.add('hidden');
+  currentStep=0;
+}
+
+function startPayment(method) {
+  currentMethod=method;
+  currentStep=1;
+  const cfg=methodConfig[method];
+  totalSteps=cfg.steps;
+  document.getElementById('homeView').classList.add('hidden');
+  document.getElementById('paymentView').classList.remove('hidden');
+  renderStepIndicator();
+  renderStep();
+}
+
+function renderStepIndicator() {
+  const cfg=methodConfig[currentMethod];
+  const c=document.getElementById('stepIndicator');
+  let html='';
+  for(let i=1;i<=totalSteps;i++){
+    const active=i===currentStep;
+    const done=i<currentStep;
+    const color=cfg.color;
+    html+=`<div class="flex flex-col items-center" style="animation:fadeInUp 0.4s ease ${i*0.1}s both">
+      <div class="step-circle w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium border-2 ${
+        done?`bg-${color}-500 border-${color}-500 text-white`:
+        active?`border-${color}-500 text-${color}-400 dark:bg-${color}-500/10`:
+        'border-neutral-700 dark:text-neutral-500 text-neutral-400'
+      }">
+        ${done?'<i data-lucide="check" class="w-4 h-4"></i>':i}
+      </div>
+      <div class="text-[10px] mt-2 dark:text-neutral-500 text-neutral-400 text-center max-w-[70px]">${cfg.stepNames[i-1]}</div>
+    </div>`;
+    if(i<totalSteps){
+      html+=`<div class="flex-1 h-0.5 mt-5 mx-2 rounded ${i<currentStep?'bg-'+color+'-500':'dark:bg-neutral-800 bg-neutral-200'} step-line"></div>`;
+    }
+  }
+  c.innerHTML=html;
+  lucide.createIcons();
+}
+
+function nextStep() {
+  if(currentStep<totalSteps){currentStep++;renderStepIndicator();renderStep();}
+}
+
+function renderStep() {
+  const area=document.getElementById('paymentContent');
+  area.innerHTML='';
+  const renderers = {
+    card: [renderCardStep1, renderCardStep2, renderProcessing, renderReceipt],
+    upi:  [renderUPIStep1, renderUPIStep2, renderProcessing, renderReceipt],
+    paypal:[renderPayPalStep1,renderPayPalStep2,renderProcessing,renderReceipt],
+    bank: [renderBankStep1, renderBankStep2, renderProcessing, renderReceipt],
+    crypto:[renderCryptoStep1,renderCryptoStep2,renderProcessing,renderReceipt],
+    mobilepay:[renderMobilePayStep1,renderProcessing,renderReceipt],
+    bnpl: [renderBNPLStep1, renderBNPLStep2, renderProcessing, renderReceipt],
+    link: [renderLinkStep1, renderLinkStep2, renderReceipt],
+    invoice:[renderInvoiceStep1,renderInvoiceStep2,renderProcessing,renderReceipt],
+  };
+  renderers[currentMethod][currentStep-1](area);
+}
+
+// ====================== CARD PAYMENT ======================
+function renderCardStep1(area) {
+  area.innerHTML=`
+  <div class="fade-up">
+    <div class="text-center mb-8">
+      <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Enter Card Details</h2>
+      <p class="text-sm dark:text-neutral-400 text-neutral-500">Your card information is encrypted and secure</p>
+    </div>
+    <!-- Animated Card -->
+    <div class="flex justify-center mb-8">
+      <div class="card-3d">
+        <div class="card-inner" id="cardInner">
+          <div class="card-front">
+            <div class="flex justify-between items-start mb-8">
+              <div class="card-chip"></div>
+              <div id="cardBrandIcon" class="text-2xl">💳</div>
+            </div>
+            <div id="cardNumberDisplay" class="text-lg tracking-[3px] font-mono text-white/90 mb-6" style="letter-spacing:3px">
+              •••• •••• •••• ••••
+            </div>
+            <div class="flex justify-between items-end">
+              <div>
+                <div class="text-[9px] uppercase text-white/50 mb-1">Card Holder</div>
+                <div id="cardNameDisplay" class="text-sm tracking-wider text-white/80 uppercase">YOUR NAME</div>
+              </div>
+              <div>
+                <div class="text-[9px] uppercase text-white/50 mb-1">Expires</div>
+                <div id="cardExpiryDisplay" class="text-sm text-white/80">MM/YY</div>
+              </div>
+            </div>
+          </div>
+          <div class="card-back">
+            <div class="magnetic-strip"></div>
+            <div class="mt-6 px-4">
+              <div class="text-[9px] uppercase text-white/50 mb-1 text-right">CVV</div>
+              <div class="bg-white/20 rounded px-3 py-2 text-right">
+                <span id="cardCVVDisplay" class="text-lg tracking-widest font-mono text-white">•••</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Form -->
+    <div class="glass-panel rounded-2xl p-6 space-y-4 max-w-md mx-auto">
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">Card Number</label>
+        <input id="cardNumber" type="text" maxlength="19" placeholder="1234 5678 9012 3456"
+          class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none font-mono"
+          oninput="formatCardNumber(this)">
+      </div>
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">Cardholder Name</label>
+        <input id="cardName" type="text" placeholder="John Doe"
+          class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none"
+          oninput="updateCardName(this)">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">Expiry</label>
+          <input id="cardExpiry" type="text" maxlength="5" placeholder="MM/YY"
+            class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none font-mono"
+            oninput="formatExpiry(this)">
+        </div>
+        <div>
+          <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">CVV</label>
+          <input id="cardCVV" type="text" maxlength="4" placeholder="•••"
+            class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none font-mono"
+            oninput="updateCVV(this)" onfocus="flipCard(true)" onblur="flipCard(false)">
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-xs dark:text-neutral-500 text-neutral-400 pt-2">
+        <i data-lucide="lock" class="w-3 h-3 text-green-400"></i>
+        Secured with 256-bit SSL encryption
+      </div>
+      <button onclick="nextStep()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 rounded-lg transition-colors text-sm mt-2">
+        Continue to Confirm <i data-lucide="arrow-right" class="w-4 h-4 inline"></i>
+      </button>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+let cardFlipped=false;
+function flipCard(toBack){
+  cardFlipped=toBack;
+  document.getElementById('cardInner').classList.toggle('flipped',toBack);
+}
+
+function formatCardNumber(el){
+  let v=el.value.replace(/\D/g,'').substring(0,16);
+  let formatted=v.replace(/(.{4})/g,'$1 ').trim();
+  el.value=formatted;
+  // Update display
+  const display=document.getElementById('cardNumberDisplay');
+  if(v.length===0) display.textContent='•••• •••• •••• ••••';
+  else{
+    let parts=[];
+    for(let i=0;i<4;i++){
+      const seg=v.substring(i*4,(i+1)*4);
+      parts.push(seg.length?seg:'••••');
+    }
+    display.textContent=parts.join(' ');
+  }
+  // Detect brand
+  const brand=document.getElementById('cardBrandIcon');
+  if(v.startsWith('4')) brand.textContent='💳';
+  else if(v.startsWith('5')) brand.textContent='💳';
+  else if(v.startsWith('3')) brand.textContent='💳';
+  else brand.textContent='💳';
+}
+
+function updateCardName(el){
+  const display=document.getElementById('cardNameDisplay');
+  display.textContent=el.value?el.value.toUpperCase():'YOUR NAME';
+}
+
+function formatExpiry(el){
+  let v=el.value.replace(/\D/g,'').substring(0,4);
+  if(v.length>=3) v=v.substring(0,2)+'/'+v.substring(2);
+  el.value=v;
+  document.getElementById('cardExpiryDisplay').textContent=v||'MM/YY';
+}
+
+function updateCVV(el){
+  let v=el.value.replace(/\D/g,'').substring(0,4);
+  el.value=v;
+  const display=document.getElementById('cardCVVDisplay');
+  display.textContent=v||'•••';
+}
+
+function renderCardStep2(area){
+  const num=document.getElementById('cardNumber')?.value||'4242 4242 4242 4242';
+  const name=document.getElementById('cardName')?.value||'John Doe';
+  const exp=document.getElementById('cardExpiry')?.value||'12/26';
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="credit-card" class="w-8 h-8 text-blue-400"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Confirm Payment</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Please review your payment details</p>
+    <div class="glass-panel rounded-2xl p-6 max-w-md mx-auto text-left space-y-4">
+      <div class="flex justify-between items-center py-2 border-b dark:border-neutral-800 border-neutral-200">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Amount</span>
+        <span class="text-lg font-semibold dark:text-white text-neutral-900">$299.00</span>
+      </div>
+      <div class="flex justify-between items-center py-2 border-b dark:border-neutral-800 border-neutral-200">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Card</span>
+        <span class="text-sm dark:text-white text-neutral-900 font-mono">${num}</span>
+      </div>
+      <div class="flex justify-between items-center py-2 border-b dark:border-neutral-800 border-neutral-200">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Name</span>
+        <span class="text-sm dark:text-white text-neutral-900">${name}</span>
+      </div>
+      <div class="flex justify-between items-center py-2 border-b dark:border-neutral-800 border-neutral-200">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Expiry</span>
+        <span class="text-sm dark:text-white text-neutral-900">${exp}</span>
+      </div>
+      <div class="flex justify-between items-center py-2">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Fee</span>
+        <span class="text-sm text-green-400">$0.00</span>
+      </div>
+      <button onclick="nextStep()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 rounded-lg transition-colors text-sm">
+        Pay $299.00
+      </button>
+      <button onclick="currentStep=1;renderStepIndicator();renderStep()" class="w-full text-sm dark:text-neutral-400 text-neutral-500 hover:text-white transition-colors py-2">
+        Edit details
+      </button>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+// ====================== UPI ======================
+function renderUPIStep1(area){
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="smartphone" class="w-8 h-8 text-green-400"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Enter UPI ID</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Your VPA (Virtual Payment Address)</p>
+    <div class="glass-panel rounded-2xl p-6 max-w-md mx-auto space-y-4">
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">UPI ID</label>
+        <input id="upiId" type="text" placeholder="yourname@upi"
+          class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none font-mono">
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="document.getElementById('upiId').value='john@okaxis';showToast('UPI ID selected')" class="text-xs px-3 py-1.5 rounded-lg dark:bg-neutral-800 bg-neutral-100 dark:text-neutral-300 text-neutral-600 border dark:border-neutral-700 border-neutral-200 hover:border-green-500 transition-colors">@okaxis</button>
+        <button onclick="document.getElementById('upiId').value='john@okhdfcbank';showToast('UPI ID selected')" class="text-xs px-3 py-1.5 rounded-lg dark:bg-neutral-800 bg-neutral-100 dark:text-neutral-300 text-neutral-600 border dark:border-neutral-700 border-neutral-200 hover:border-green-500 transition-colors">@okhdfcbank</button>
+        <button onclick="document.getElementById('upiId').value='john@okicici';showToast('UPI ID selected')" class="text-xs px-3 py-1.5 rounded-lg dark:bg-neutral-800 bg-neutral-100 dark:text-neutral-300 text-neutral-600 border dark:border-neutral-700 border-neutral-200 hover:border-green-500 transition-colors">@okicici</button>
+        <button onclick="document.getElementById('upiId').value='john@ybl';showToast('UPI ID selected')" class="text-xs px-3 py-1.5 rounded-lg dark:bg-neutral-800 bg-neutral-100 dark:text-neutral-300 text-neutral-600 border dark:border-neutral-700 border-neutral-200 hover:border-green-500 transition-colors">@ybl</button>
+      </div>
+      <button onclick="nextStep()" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition-colors text-sm">
+        Verify & Continue
+      </button>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+function renderUPIStep2(area){
+  const upi=document.getElementById('upiId')?.value||'john@upi';
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="smartphone" class="w-8 h-8 text-green-400"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Confirm Payment</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-2">Open your UPI app to approve</p>
+    <div class="animate-pulse text-xs text-green-400 mb-6">Waiting for approval...</div>
+    <div class="glass-panel rounded-2xl p-6 max-w-md mx-auto text-left space-y-4">
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Amount</span>
+        <span class="text-lg font-semibold dark:text-white text-neutral-900">$299.00</span>
+      </div>
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">UPI ID</span>
+        <span class="text-sm dark:text-white text-neutral-900 font-mono">${upi}</span>
+      </div>
+      <div class="flex justify-between py-2">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Merchant</span>
+        <span class="text-sm dark:text-white text-neutral-900">PayNova Store</span>
+      </div>
+      <button onclick="nextStep()" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition-colors text-sm">
+        Approve & Pay $299.00
+      </button>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+// ====================== PAYPAL ======================
+function renderPayPalStep1(area){
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-blue-600/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="wallet" class="w-8 h-8 text-blue-500"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">PayPal Login</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Sign in to your PayPal account</p>
+    <div class="glass-panel rounded-2xl p-6 max-w-md mx-auto space-y-4">
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">Email</label>
+        <input id="ppEmail" type="email" placeholder="you@email.com"
+          class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none">
+      </div>
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">Password</label>
+        <input id="ppPass" type="password" placeholder="••••••••"
+          class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none">
+      </div>
+      <button onclick="nextStep()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors text-sm">
+        Log In & Continue
+      </button>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+function renderPayPalStep2(area){
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-blue-600/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="wallet" class="w-8 h-8 text-blue-500"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Confirm with PayPal</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Review and confirm your payment</p>
+    <div class="glass-panel rounded-2xl p-6 max-w-md mx-auto text-left space-y-4">
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Amount</span>
+        <span class="text-lg font-semibold dark:text-white text-neutral-900">$299.00</span>
+      </div>
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Pay From</span>
+        <span class="text-sm dark:text-white text-neutral-900">PayPal Balance</span>
+      </div>
+      <div class="flex justify-between py-2">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Merchant</span>
+        <span class="text-sm dark:text-white text-neutral-900">PayNova Store</span>
+      </div>
+      <button onclick="nextStep()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors text-sm">
+        Confirm Payment
+      </button>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+// ====================== BANK TRANSFER ======================
+function renderBankStep1(area){
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="landmark" class="w-8 h-8 text-purple-400"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Bank Details</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Enter your bank account information</p>
+    <div class="glass-panel rounded-2xl p-6 max-w-md mx-auto space-y-4">
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">Account Holder</label>
+        <input type="text" placeholder="John Doe" value="John Doe"
+          class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none">
+      </div>
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">Account Number</label>
+        <input type="text" placeholder="1234567890" value="4455667788"
+          class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none font-mono">
+      </div>
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">Routing Number</label>
+        <input type="text" placeholder="021000021" value="021000021"
+          class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none font-mono">
+      </div>
+      <button onclick="nextStep()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 rounded-lg transition-colors text-sm">
+        Continue
+      </button>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+function renderBankStep2(area){
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="landmark" class="w-8 h-8 text-purple-400"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Confirm Transfer</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Verify the bank transfer details</p>
+    <div class="glass-panel rounded-2xl p-6 max-w-md mx-auto text-left space-y-4">
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Amount</span>
+        <span class="text-lg font-semibold dark:text-white text-neutral-900">$299.00</span>
+      </div>
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">From</span>
+        <span class="text-sm dark:text-white text-neutral-900">••7788</span>
+      </div>
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Type</span>
+        <span class="text-sm dark:text-white text-neutral-900">ACH Direct</span>
+      </div>
+      <div class="flex justify-between py-2">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Est. Arrival</span>
+        <span class="text-sm dark:text-white text-neutral-900">1-3 business days</span>
+      </div>
+      <button onclick="nextStep()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 rounded-lg transition-colors text-sm">
+        Initiate Transfer
+      </button>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+// ====================== CRYPTO ======================
+function renderCryptoStep1(area){
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="bitcoin" class="w-8 h-8 text-cyan-400"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Wallet Address</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Select cryptocurrency and send to address</p>
+    <div class="glass-panel rounded-2xl p-6 max-w-md mx-auto space-y-4">
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-2 block">Select Coin</label>
+        <div class="flex gap-2">
+          <button onclick="selectCoin(this,'BTC')" class="coin-btn flex-1 py-2 rounded-lg border-2 border-cyan-500 bg-cyan-500/10 text-cyan-400 text-sm font-medium transition-colors">BTC</button>
+          <button onclick="selectCoin(this,'ETH')" class="coin-btn flex-1 py-2 rounded-lg border dark:border-neutral-700 border-neutral-200 dark:text-neutral-400 text-neutral-500 text-sm font-medium transition-colors">ETH</button>
+          <button onclick="selectCoin(this,'USDT')" class="coin-btn flex-1 py-2 rounded-lg border dark:border-neutral-700 border-neutral-200 dark:text-neutral-400 text-neutral-500 text-sm font-medium transition-colors">USDT</button>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">Send to this address</label>
+        <div class="flex items-center gap-2">
+          <input id="cryptoAddr" type="text" value="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh" readonly
+            class="input-card flex-1 bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-xs dark:text-white text-neutral-900 font-mono outline-none">
+          <button onclick="navigator.clipboard?.writeText(document.getElementById('cryptoAddr').value);showToast('Address copied!')" class="p-3 rounded-lg dark:bg-neutral-800 bg-neutral-100 border dark:border-neutral-700 border-neutral-200">
+            <i data-lucide="copy" class="w-4 h-4 dark:text-neutral-400 text-neutral-500"></i>
+          </button>
+        </div>
+      </div>
+      <div class="bg-neutral-800/30 rounded-lg p-3 text-xs dark:text-neutral-400 text-neutral-500">
+        <div class="flex justify-between mb-1"><span>Amount</span><span class="dark:text-white text-neutral-900 font-medium">0.00452 BTC</span></div>
+        <div class="flex justify-between"><span>Network Fee</span><span class="text-green-400">~$2.50</span></div>
+      </div>
+      <button onclick="nextStep()" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-medium py-3 rounded-lg transition-colors text-sm">
+        I've Sent the Payment
+      </button>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+function selectCoin(el,coin){
+  document.querySelectorAll('.coin-btn').forEach(b=>{
+    b.classList.remove('border-cyan-500','bg-cyan-500/10','text-cyan-400');
+    b.classList.add('border-neutral-700','text-neutral-400');
+  });
+  el.classList.remove('border-neutral-700','text-neutral-400');
+  el.classList.add('border-cyan-500','bg-cyan-500/10','text-cyan-400');
+  const addr=document.getElementById('cryptoAddr');
+  if(coin==='BTC') addr.value='bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
+  else if(coin==='ETH') addr.value='0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18';
+  else addr.value='TN2Y4r3Cf8WQz3d5UMEwGDMbQVXT2cKJoA';
+  showToast(coin+' selected');
+}
+
+function renderCryptoStep2(area){
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="bitcoin" class="w-8 h-8 text-cyan-400"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Confirm Transaction</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Waiting for blockchain confirmation</p>
+    <div class="glass-panel rounded-2xl p-6 max-w-md mx-auto text-left space-y-4">
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Amount</span>
+        <span class="text-lg font-semibold dark:text-white text-neutral-900">$299.00</span>
+      </div>
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Crypto</span>
+        <span class="text-sm dark:text-white text-neutral-900">0.00452 BTC</span>
+      </div>
+      <div class="flex justify-between py-2">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Confirmations</span>
+        <span class="text-sm text-yellow-400">0/3 required</span>
+      </div>
+      <button onclick="nextStep()" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-medium py-3 rounded-lg transition-colors text-sm">
+        Verify on Blockchain
+      </button>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+// ====================== MOBILE PAY ======================
+function renderMobilePayStep1(area){
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="nfc" class="w-8 h-8 text-orange-400"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Authenticate</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Verify with biometrics or passcode</p>
+    <div class="glass-panel rounded-2xl p-8 max-w-md mx-auto space-y-6">
+      <!-- Fingerprint animation -->
+      <div class="flex justify-center">
+        <div class="relative">
+          <div class="w-24 h-24 rounded-full border-2 border-orange-500/30 flex items-center justify-center cursor-pointer hover:border-orange-500 transition-colors" onclick="animateFingerprint(this)">
+            <i data-lucide="fingerprint" class="w-12 h-12 text-orange-400"></i>
+          </div>
+          <div class="absolute inset-0 w-24 h-24 rounded-full border-2 border-orange-500 animate-ping opacity-20"></div>
+        </div>
+      </div>
+      <p class="text-xs dark:text-neutral-500 text-neutral-400">Tap the fingerprint to authenticate</p>
+      <div class="flex items-center justify-center gap-4 text-xs dark:text-neutral-500 text-neutral-400">
+        <div class="flex items-center gap-1"><i data-lucide="smartphone" class="w-3 h-3"></i>Apple Pay</div>
+        <div class="w-1 h-1 rounded-full dark:bg-neutral-700 bg-neutral-300"></div>
+        <div class="flex items-center gap-1"><i data-lucide="smartphone" class="w-3 h-3"></i>Google Pay</div>
+      </div>
+      <div class="dark:bg-neutral-800/50 bg-neutral-100 rounded-lg p-4 text-left space-y-2">
+        <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">Amount</span><span class="dark:text-white text-neutral-900 font-medium">$299.00</span></div>
+        <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">Card</span><span class="dark:text-white text-neutral-900">•••• 4242</span></div>
+      </div>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+function animateFingerprint(el){
+  el.style.borderColor='#F97316';
+  el.style.background='rgba(249,115,22,0.1)';
+  el.innerHTML='<i data-lucide="check" class="w-12 h-12 text-green-400"></i>';
+  lucide.createIcons();
+  showToast('Authentication successful!');
+  setTimeout(()=>nextStep(),800);
+}
+
+// ====================== BNPL ======================
+function renderBNPLStep1(area){
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-pink-500/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="calendar-check" class="w-8 h-8 text-pink-400"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Select Payment Plan</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Choose how you'd like to split your payment</p>
+    <div class="max-w-md mx-auto space-y-3">
+      <div onclick="selectPlan(this,1)" class="plan-option glass-panel rounded-xl p-4 cursor-pointer border-2 border-pink-500 transition-all">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm font-medium dark:text-white text-neutral-900">Pay in 4</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-400">Popular</span>
+        </div>
+        <div class="text-2xl font-semibold dark:text-white text-neutral-900 mb-1">$74.75 <span class="text-sm font-normal dark:text-neutral-500 text-neutral-400">/ 2 weeks</span></div>
+        <div class="text-xs dark:text-neutral-500 text-neutral-400">4 interest-free payments • No fees</div>
+        <div class="flex gap-2 mt-3">
+          <div class="flex-1 h-1.5 bg-pink-500 rounded-full"></div>
+          <div class="flex-1 h-1.5 dark:bg-neutral-700 bg-neutral-200 rounded-full"></div>
+          <div class="flex-1 h-1.5 dark:bg-neutral-700 bg-neutral-200 rounded-full"></div>
+          <div class="flex-1 h-1.5 dark:bg-neutral-700 bg-neutral-200 rounded-full"></div>
+        </div>
+      </div>
+      <div onclick="selectPlan(this,2)" class="plan-option glass-panel rounded-xl p-4 cursor-pointer border-2 border-transparent hover:border-pink-500/30 transition-all">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm font-medium dark:text-white text-neutral-900">Pay in 6</span>
+        </div>
+        <div class="text-2xl font-semibold dark:text-white text-neutral-900 mb-1">$49.83 <span class="text-sm font-normal dark:text-neutral-500 text-neutral-400">/ month</span></div>
+        <div class="text-xs dark:text-neutral-500 text-neutral-400">6 monthly payments • 0% APR</div>
+      </div>
+      <div onclick="selectPlan(this,3)" class="plan-option glass-panel rounded-xl p-4 cursor-pointer border-2 border-transparent hover:border-pink-500/30 transition-all">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm font-medium dark:text-white text-neutral-900">Pay in 12</span>
+        </div>
+        <div class="text-2xl font-semibold dark:text-white text-neutral-900 mb-1">$24.92 <span class="text-sm font-normal dark:text-neutral-500 text-neutral-400">/ month</span></div>
+        <div class="text-xs dark:text-neutral-500 text-neutral-400">12 monthly payments • 5.9% APR</div>
+      </div>
+      <button onclick="nextStep()" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-medium py-3 rounded-lg transition-colors text-sm">
+        Continue with Plan
+      </button>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+function selectPlan(el,num){
+  document.querySelectorAll('.plan-option').forEach(o=>{
+    o.classList.remove('border-pink-500');
+    o.classList.add('border-transparent');
+  });
+  el.classList.remove('border-transparent');
+  el.classList.add('border-pink-500');
+  showToast('Plan '+num+' selected');
+}
+
+function renderBNPLStep2(area){
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-pink-500/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="calendar-check" class="w-8 h-8 text-pink-400"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Confirm Plan</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Review your installment schedule</p>
+    <div class="glass-panel rounded-2xl p-6 max-w-md mx-auto text-left space-y-3">
+      <div class="flex justify-between py-2 border-b dark:border-neutral-800 border-neutral-200">
+        <span class="text-xs dark:text-neutral-500 text-neutral-400">Total</span>
+        <span class="text-lg font-semibold dark:text-white text-neutral-900">$299.00</span>
+      </div>
+      <div class="text-xs font-medium dark:text-neutral-300 text-neutral-600 mb-2">Schedule</div>
+      <div class="flex justify-between py-1.5 text-xs"><span class="dark:text-neutral-400 text-neutral-500">Today</span><span class="dark:text-white text-neutral-900">$74.75</span></div>
+      <div class="flex justify-between py-1.5 text-xs"><span class="dark:text-neutral-400 text-neutral-500">Jan 15</span><span class="dark:text-white text-neutral-900">$74.75</span></div>
+      <div class="flex justify-between py-1.5 text-xs"><span class="dark:text-neutral-400 text-neutral-500">Jan 29</span><span class="dark:text-white text-neutral-900">$74.75</span></div>
+      <div class="flex justify-between py-1.5 text-xs"><span class="dark:text-neutral-400 text-neutral-500">Feb 12</span><span class="dark:text-white text-neutral-900">$74.75</span></div>
+      <button onclick="nextStep()" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-medium py-3 rounded-lg transition-colors text-sm mt-4">
+        Agree & Pay First Installment
+      </button>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+// ====================== PAYMENT LINK ======================
+function renderLinkStep1(area){
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-yellow-500/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="link" class="w-8 h-8 text-yellow-400"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Generate Payment Link</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Create a shareable payment link</p>
+    <div class="glass-panel rounded-2xl p-6 max-w-md mx-auto space-y-4">
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">Amount</label>
+        <input type="text" value="$299.00"
+          class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 outline-none">
+      </div>
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">Description</label>
+        <input type="text" value="Pro Plan Subscription"
+          class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 outline-none">
+      </div>
+      <button onclick="generateLink()" id="genLinkBtn" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-3 rounded-lg transition-colors text-sm">
+        Generate Link
+      </button>
+      <div id="generatedLink" class="hidden">
+        <div class="dark:bg-neutral-800/50 bg-neutral-100 rounded-lg p-3 flex items-center gap-2">
+          <i data-lucide="link" class="w-4 h-4 text-yellow-400 flex-shrink-0"></i>
+          <span class="text-xs dark:text-white text-neutral-900 font-mono truncate">https://pay.paynova.com/link/inv_2024_aBc123xYz</span>
+          <button onclick="navigator.clipboard?.writeText('https://pay.paynova.com/link/inv_2024_aBc123xYz');showToast('Link copied!')" class="flex-shrink-0 p-1 rounded dark:hover:bg-neutral-700 hover:bg-neutral-200">
+            <i data-lucide="copy" class="w-3 h-3 dark:text-neutral-400 text-neutral-500"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+function generateLink(){
+  const btn=document.getElementById('genLinkBtn');
+  btn.textContent='Generating...';btn.disabled=true;
+  setTimeout(()=>{
+    document.getElementById('generatedLink').classList.remove('hidden');
+    btn.textContent='Link Generated ✓';btn.classList.remove('bg-yellow-600','hover:bg-yellow-700');btn.classList.add('bg-green-600');
+    lucide.createIcons();
+    showToast('Payment link generated!');
+  },1200);
+}
+
+function renderLinkStep2(area){
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-yellow-500/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="share-2" class="w-8 h-8 text-yellow-400"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Share Link</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Send the payment link to your customer</p>
+    <div class="glass-panel rounded-2xl p-6 max-w-md mx-auto space-y-4">
+      <div class="flex gap-3">
+        <button onclick="showToast('Email sent!');setTimeout(()=>nextStep(),600)" class="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border dark:border-neutral-700 border-neutral-200 dark:text-neutral-300 text-neutral-600 dark:hover:bg-neutral-800 hover:bg-neutral-100 text-sm transition-colors">
+          <i data-lucide="mail" class="w-4 h-4"></i> Email
+        </button>
+        <button onclick="showToast('SMS sent!');setTimeout(()=>nextStep(),600)" class="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border dark:border-neutral-700 border-neutral-200 dark:text-neutral-300 text-neutral-600 dark:hover:bg-neutral-800 hover:bg-neutral-100 text-sm transition-colors">
+          <i data-lucide="message-square" class="w-4 h-4"></i> SMS
+        </button>
+        <button onclick="showToast('Link copied!');setTimeout(()=>nextStep(),600)" class="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border dark:border-neutral-700 border-neutral-200 dark:text-neutral-300 text-neutral-600 dark:hover:bg-neutral-800 hover:bg-neutral-100 text-sm transition-colors">
+          <i data-lucide="copy" class="w-4 h-4"></i> Copy
+        </button>
+      </div>
+      <div class="text-xs dark:text-neutral-500 text-neutral-400 text-center">
+        Customer will see a branded checkout page
+      </div>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+// ====================== INVOICE ======================
+function renderInvoiceStep1(area){
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="file-text" class="w-8 h-8 text-emerald-400"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Create Invoice</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Fill in the invoice details</p>
+    <div class="glass-panel rounded-2xl p-6 max-w-md mx-auto space-y-4">
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">Customer Email</label>
+        <input id="invEmail" type="email" placeholder="customer@email.com" value="alice@company.com"
+          class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none">
+      </div>
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">Item</label>
+        <input type="text" value="Pro Plan - Annual"
+          class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 placeholder-neutral-500 outline-none">
+      </div>
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">Amount</label>
+        <input type="text" value="$299.00"
+          class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 outline-none">
+      </div>
+      <div>
+        <label class="text-xs dark:text-neutral-400 text-neutral-500 mb-1 block">Due Date</label>
+        <input type="text" value="Jan 15, 2025"
+          class="input-card w-full bg-neutral-800/50 dark:bg-neutral-800/50 bg-neutral-100 border dark:border-neutral-700 border-neutral-200 rounded-lg px-4 py-3 text-sm dark:text-white text-neutral-900 outline-none">
+      </div>
+      <button onclick="nextStep()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-lg transition-colors text-sm">
+        Create Invoice
+      </button>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+function renderInvoiceStep2(area){
+  const email=document.getElementById('invEmail')?.value||'alice@company.com';
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
+      <i data-lucide="send" class="w-8 h-8 text-emerald-400"></i>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Send Invoice</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Invoice created! Send it to your customer</p>
+    <div class="glass-panel rounded-2xl p-6 max-w-md mx-auto space-y-4">
+      <div class="dark:bg-neutral-800/50 bg-neutral-100 rounded-lg p-4 text-left space-y-2">
+        <div class="flex justify-between text-xs mb-3"><span class="dark:text-neutral-500 text-neutral-400">Invoice</span><span class="dark:text-white text-neutral-900 font-medium">#INV-2024-001</span></div>
+        <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">To</span><span class="dark:text-white text-neutral-900">${email}</span></div>
+        <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">Amount</span><span class="dark:text-white text-neutral-900">$299.00</span></div>
+        <div class="flex justify-between text-xs"><span class="dark:text-neutral-500 text-neutral-400">Due</span><span class="dark:text-white text-neutral-900">Jan 15, 2025</span></div>
+      </div>
+      <button onclick="showToast('Invoice sent!');nextStep()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-lg transition-colors text-sm">
+        Send Invoice
+      </button>
+    </div>
+  </div>`;
+  lucide.createIcons();
+}
+
+// ====================== PROCESSING (Universal) ======================
+function renderProcessing(area){
+  const cfg=methodConfig[currentMethod];
+  const colorMap={blue:'blue',green:'green',purple:'purple',cyan:'cyan',orange:'orange',pink:'pink',yellow:'yellow',emerald:'emerald'};
+  const c=colorMap[cfg.color]||'orange';
+
+  area.innerHTML=`
+  <div class="fade-up text-center">
+    <div class="processing-spinner mx-auto mb-6"></div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-2">Processing Payment</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Please wait while we process your transaction...</p>
+    <div class="max-w-md mx-auto space-y-3">
+      <div class="flex items-center gap-3 slide-right" style="animation-delay:0.2s">
+        <div class="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center"><i data-lucide="check" class="w-3 h-3 text-green-400"></i></div>
+        <span class="text-sm dark:text-neutral-300 text-neutral-600">Payment initiated</span>
+      </div>
+      <div class="flex items-center gap-3 slide-right" style="animation-delay:0.8s">
+        <div class="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center"><i data-lucide="check" class="w-3 h-3 text-green-400"></i></div>
+        <span class="text-sm dark:text-neutral-300 text-neutral-600">Verifying details</span>
+      </div>
+      <div class="flex items-center gap-3" id="procStep3">
+        <div class="processing-spinner w-6 h-6 !border-2 !border-t-orange-500" style="animation-delay:1.4s"></div>
+        <span class="text-sm dark:text-neutral-400 text-neutral-500">Authorizing payment...</span>
+      </div>
+      <div class="flex items-center gap-3 opacity-30" id="procStep4">
+        <div class="w-6 h-6 rounded-full dark:bg-neutral-800 bg-neutral-200 flex items-center justify-center"><span class="text-xs dark:text-neutral-600 text-neutral-400">4</span></div>
+        <span class="text-sm dark:text-neutral-500 text-neutral-400">Completing transaction</span>
+      </div>
+    </div>
+    <!-- Progress bar -->
+    <div class="max-w-md mx-auto mt-8 h-1 dark:bg-neutral-800 bg-neutral-200 rounded-full overflow-hidden">
+      <div id="procBar" class="h-1 bg-orange-500 rounded-full" style="width:0;animation:progressBar 3s ease forwards"></div>
+    </div>
+  </div>`;
+  lucide.createIcons();
+
+  // Animate steps
+  setTimeout(()=>{
+    const s3=document.getElementById('procStep3');
+    if(s3)s3.innerHTML='<div class="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center"><i data-lucide="check" class="w-3 h-3 text-green-400"></i></div><span class="text-sm dark:text-neutral-300 text-neutral-600">Payment authorized</span>';
+    const s4=document.getElementById('procStep4');
+    if(s4){s4.classList.remove('opacity-30');s4.innerHTML='<div class="processing-spinner w-6 h-6 !border-2 !border-t-orange-500"></div><span class="text-sm dark:text-neutral-400 text-neutral-500">Completing...</span>';}
+    lucide.createIcons();
+  },1500);
+
+  setTimeout(()=>{
+    const s4=document.getElementById('procStep4');
+    if(s4)s4.innerHTML='<div class="w-6 h-6 rounded-full bg-green-500/10 flex items-center justify-center"><i data-lucide="check" class="w-3 h-3 text-green-400"></i></div><span class="text-sm dark:text-neutral-300 text-neutral-600">Transaction complete</span>';
+    lucide.createIcons();
+  },2500);
+
+  setTimeout(()=>nextStep(),3000);
+}
+
+// ====================== RECEIPT (Universal) ======================
+function renderReceipt(area){
+  const cfg=methodConfig[currentMethod];
+  const txId='TXN-'+Math.random().toString(36).substring(2,10).toUpperCase();
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const timeStr=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  area.innerHTML=`
+  <div class="bounce-in text-center relative" id="receiptArea">
+    <!-- Confetti -->
+    <div id="confettiContainer" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+
+    <div class="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4 success-check">
+      <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="#22C55E" stroke-width="2" opacity="0.3"/><path d="M12 20 L18 26 L28 14" fill="none" stroke="#22C55E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h2 class="text-2xl font-medium dark:text-white text-neutral-900 mb-1">Payment Successful!</h2>
+    <p class="text-sm dark:text-neutral-400 text-neutral-500 mb-8">Your transaction has been completed</p>
+
+    <!-- Receipt Card -->
+    <div class="glass-panel rounded-2xl overflow-hidden max-w-md mx-auto text-left">
+      <div class="bg-green-500/5 p-4 text-center border-b dark:border-neutral-800 border-neutral-200">
+        <div class="text-xs text-green-400 font-medium mb-1">AMOUNT PAID</div>
+        <div class="text-3xl font-semibold dark:text-white text-neutral-900">$299.00</div>
+      </div>
+      <div class="p-5 space-y-3">
+        <div class="flex justify-between text-sm"><span class="dark:text-neutral-500 text-neutral-400">Transaction ID</span><span class="dark:text-white text-neutral-900 font-mono text-xs">${txId}</span></div>
+        <div class="flex justify-between text-sm"><span class="dark:text-neutral-500 text-neutral-400">Date</span><span class="dark:text-white text-neutral-900">${dateStr}</span></div>
+        <div class="flex justify-between text-sm"><span class="dark:text-neutral-500 text-neutral-400">Time</span><span class="dark:text-white text-neutral-900">${timeStr}</span></div>
+        <div class="flex justify-between text-sm"><span class="dark:text-neutral-500 text-neutral-400">Method</span><span class="dark:text-white text-neutral-900">${cfg.name}</span></div>
+        <div class="flex justify-between text-sm"><span class="dark:text-neutral-500 text-neutral-400">Status</span><span class="text-green-400 font-medium flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i>Confirmed</span></div>
+        <div class="flex justify-between text-sm"><span class="dark:text-neutral-500 text-neutral-400">Merchant</span><span class="dark:text-white text-neutral-900">PayNova Store</span></div>
+        <div class="flex justify-between text-sm"><span class="dark:text-neutral-500 text-neutral-400">Currency</span><span class="dark:text-white text-neutral-900">USD</span></div>
+        <div class="flex justify-between text-sm"><span class="dark:text-neutral-500 text-neutral-400">Fee</span><span class="text-green-400">$0.00</span></div>
+      </div>
+      <!-- Dashed line -->
+      <div class="px-5"><div class="border-t-2 border-dashed dark:border-neutral-700 border-neutral-300"></div></div>
+      <div class="p-5 flex gap-3">
+        <button onclick="showToast('Receipt downloaded!')" class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border dark:border-neutral-700 border-neutral-200 dark:text-neutral-300 text-neutral-600 text-sm dark:hover:bg-neutral-800 hover:bg-neutral-100 transition-colors">
+          <i data-lucide="download" class="w-4 h-4"></i> Download
+        </button>
+        <button onclick="showToast('Receipt emailed!')" class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border dark:border-neutral-700 border-neutral-200 dark:text-neutral-300 text-neutral-600 text-sm dark:hover:bg-neutral-800 hover:bg-neutral-100 transition-colors">
+          <i data-lucide="mail" class="w-4 h-4"></i> Email
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-8 flex gap-3 justify-center">
+      <button onclick="startPayment(currentMethod)" class="text-sm dark:text-neutral-400 text-neutral-500 hover:text-orange-500 transition-colors flex items-center gap-1">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i> Retry Demo
+      </button>
+      <button onclick="goHome()" class="text-sm bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg transition-colors flex items-center gap-1">
+        <i data-lucide="home" class="w-4 h-4"></i> All Methods
+      </button>
+    </div>
+  </div>`;
+  lucide.createIcons();
+
+  // Launch confetti
+  setTimeout(launchConfetti,200);
+}
+
+function launchConfetti(){
+  const container=document.getElementById('confettiContainer');
+  if(!container)return;
+  const colors=['#F97316','#22C55E','#3B82F6','#EAB308','#EC4899','#8B5CF6','#06B6D4'];
+  for(let i=0;i<40;i++){
+    const piece=document.createElement('div');
+    piece.className='confetti-piece';
+    piece.style.left=Math.random()*100+'%';
+    piece.style.top=-10+'px';
+    piece.style.background=colors[Math.floor(Math.random()*colors.length)];
+    piece.style.animationDelay=Math.random()*0.5+'s';
+    piece.style.animationDuration=(1+Math.random())+'s';
+    piece.style.width=(4+Math.random()*8)+'px';
+    piece.style.height=(4+Math.random()*8)+'px';
+    piece.style.borderRadius=Math.random()>0.5?'50%':'2px';
+    container.appendChild(piece);
+  }
+}
+</script>
+</body>
+</html>
